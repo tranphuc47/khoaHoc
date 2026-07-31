@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết khóa học</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><a class="btn red" href="login.html">Đăng nhập</a></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Khóa học › Chi tiết</div>
+    <section class="hero-strip">
+      <div><h1 id="detailTitle">Chi tiết khóa học</h1></div>
+      <div class="stats">
+        <div class="stat"><div><strong id="detailChapterCount">0</strong><span>chương</span></div></div>
+        <div class="stat"><div><strong id="detailLessonCount">0</strong><span>bài học</span></div></div>
+      </div>
+    </section>
+
+    <section class="catalog">
+      <aside class="sidebar">
+        <div class="sidebar-title">Dữ liệu hiển thị</div>
+        <ul class="sidebar-list">
+          <li>Thông tin khóa học</li>
+          <li>Danh mục</li>
+          <li>Giảng viên</li>
+          <li>Chương và bài học</li>
+          <li>Đăng ký ghi danh</li>
+        </ul>
+      </aside>
+      <section class="panel" id="courseDetail">
+        <div class="empty-state">Đang tải chi tiết khóa học...</div>
+      </section>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

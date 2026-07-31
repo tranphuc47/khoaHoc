@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><button class="btn red" data-logout>Đăng xuất</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Admin</div>
+    <section class="hero-strip">
+      <div>
+        <div class="eyebrow">Khu vực quản trị</div>
+        <h1>Điều phối danh mục, khóa học, nội dung và ghi danh</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong>5</strong><span>nhóm chức năng</span></div></div>
+      </div>
+    </section>
+
+    <section class="home-grid">
+      <article class="home-card"><h2>Danh mục</h2><p>Tạo danh mục để phân loại khóa học.</p><a class="btn" href="categories.html">Quản lý danh mục</a></article>
+      <article class="home-card"><h2>Khóa học</h2><p>Tạo khóa học, chương và bài học.</p><a class="btn" href="management.html">Quản lý khóa học</a></article>
+      <article class="home-card"><h2>Ghi danh</h2><p>Theo dõi số lượng ghi danh theo trạng thái.</p><a class="btn" href="statistics.html">Xem ghi danh</a></article>
+      <article class="home-card"><h2>Tiến độ</h2><p>Đánh giá tỷ lệ đang học và hoàn thành theo từng khóa.</p><a class="btn blue" href="statistics.html">Thống kê tiến độ</a></article>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giảng viên</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <span class="btn" data-username>Tài khoản</span>
+        <button class="btn red" data-logout>Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Giảng viên</div>
+    <section class="hero-strip">
+      <div>
+        <h1>Khóa học phụ trách, nội dung học và ghi danh</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong id="teacherCourseCount">0</strong><span>khóa phụ trách</span></div></div>
+        <div class="stat"><div><strong id="statActiveTotal">0</strong><span>đang học</span></div></div>
+      </div>
+    </section>
+
+    <section class="catalog">
+      <aside class="sidebar">
+        <div class="sidebar-title">Chức năng</div>
+        <ul class="sidebar-list">
+          <li>Tạo khóa học</li>
+          <li>Thêm chương và bài học</li>
+          <li>Theo dõi ghi danh</li>
+          <li>Xem tiến độ học viên</li>
+        </ul>
+      </aside>
+
+      <section class="panel">
+        <div class="tabs">
+          <a class="active" href="teacher.html">Khóa phụ trách</a>
+          <a href="management.html">Soạn nội dung</a>
+          <a href="statistics.html">Thống kê</a>
+        </div>
+        <div class="section-head">
+          <h2>Khóa học của tôi</h2>
+          <a class="btn blue" href="management.html">Thêm khóa học</a>
+        </div>
+        <table class="table">
+          <thead><tr><th>ID</th><th>Khóa học</th><th>Trạng thái</th><th>Danh mục</th><th>Nội dung</th></tr></thead>
+          <tbody id="teacherCourseRows"><tr><td colspan="5">Đang tải dữ liệu...</td></tr></tbody>
+        </table>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Tiến độ ghi danh theo khóa</h2></div>
+      <table class="table">
+        <thead><tr><th>Khóa học</th><th>Tiến độ hoàn thành</th><th>Tỷ lệ</th><th>Chi tiết</th></tr></thead>
+        <tbody id="progressRows"><tr><td colspan="4">Đang tải thống kê...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
