@@ -25,6 +25,11 @@ public class User {
     private String fullName;
     private String phone;
 
+    // Mới thêm cho Module 6 — khóa/mở tài khoản
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean enabled = true;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
     private Role role;

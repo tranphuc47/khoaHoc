@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,15 +33,18 @@ public class EnrollmentService {
         enrollmentRepository.findByUserIdAndCourseId(currentUser.getId(), course.getId())
                 .ifPresent(e -> { throw new BusinessException("Bạn đã đăng ký khóa học này rồi"); });
 
+        // Khóa học miễn phí (price = 0) -> ACTIVE ngay, không cần bước thanh toán
+        // Khóa học có phí -> giữ PENDING, chờ gọi API confirm-payment
+        boolean isFree = course.getPrice() == null || course.getPrice().compareTo(java.math.BigDecimal.ZERO) == 0;
+
         Enrollment enrollment = Enrollment.builder()
                 .user(currentUser)
                 .course(course)
-                .status(Enrollment.EnrollmentStatus.PENDING)
+                .status(isFree ? Enrollment.EnrollmentStatus.ACTIVE : Enrollment.EnrollmentStatus.PENDING)
                 .build();
 
         return toResponse(enrollmentRepository.save(enrollment));
     }
-
     // ===== STT 2: Student xem các khóa học mình đã đăng ký =====
     public Page<EnrollmentResponse> getMyEnrollments(Pageable pageable) {
         User currentUser = getCurrentUser();

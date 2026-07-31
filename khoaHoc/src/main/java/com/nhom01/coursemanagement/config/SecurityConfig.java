@@ -1,6 +1,5 @@
 package com.nhom01.coursemanagement.config;
 
-import com.nhom01.coursemanagement.dto.request.*;
 import com.nhom01.coursemanagement.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.*;
@@ -37,6 +36,15 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                // ===== Cho phép truy cập file tĩnh (HTML/CSS/JS) không cần đăng nhập =====
+                        .requestMatchers(
+                                "/", "/index.html", "/login.html", "/register.html",
+                                "/courses.html", "/course-detail.html", "/my-courses.html",
+                                "/teacher.html", "/admin.html", "/management.html",
+                                "/categories.html", "/users.html", "/statistics.html",
+                                "/student.html", "/grade-management.html",
+                                "/assets/**"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Whitelist đầy đủ các đường dẫn Swagger (thiếu swagger-ui.html là nguyên nhân gây lỗi 403)
                         .requestMatchers(
@@ -66,7 +74,13 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/courses/*/enrollments").hasAnyRole("ADMIN", "INSTRUCTOR")
                 .requestMatchers(HttpMethod.PUT, "/api/enrollments/*/approve").hasAnyRole("ADMIN", "INSTRUCTOR")
                 .requestMatchers(HttpMethod.GET, "/api/enrollments/statistics").hasAnyRole("ADMIN", "INSTRUCTOR")
-                        .anyRequest().authenticated()
+                 // ===== Module 6: User =====
+                .requestMatchers("/api/admin/users/**").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").authenticated()  // profile, change-password: ai đăng nhập cũng dùng được
+                 // ===== Module Payment =====
+                .requestMatchers(HttpMethod.POST, "/api/enrollments/*/confirm-payment").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/enrollments/*/payment").authenticated()
+                .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
