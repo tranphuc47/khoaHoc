@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Khóa học</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <span class="btn" data-username>Tài khoản</span>
+        <a class="btn red" href="login.html">Đăng nhập</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Khóa học</div>
+    <section class="hero-strip">
+      <div>
+        <h1>Danh sách khóa học đã xuất bản</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong id="courseCount">0</strong><span>khóa học</span></div></div>
+        <div class="stat"><div><strong>JWT</strong><span>đăng ký ghi danh</span></div></div>
+      </div>
+    </section>
+
+    <section class="catalog">
+      <aside class="sidebar">
+        <div class="sidebar-title">Danh mục</div>
+        <ul class="sidebar-list" id="categoryList"><li>Đang tải...</li></ul>
+      </aside>
+
+      <section class="panel">
+        <form id="courseSearch" class="filters">
+          <input class="field" name="keyword" placeholder="Tìm theo tên khóa học hoặc danh mục">
+          <button class="btn search" type="submit" title="Tìm kiếm">Tìm</button>
+        </form>
+
+        <div class="section-head">
+          <h2>Khóa học</h2>
+          <span id="courseCountText" class="count">0 khóa học</span>
+        </div>
+        <div id="courseList" class="empty-state">Đang tải khóa học...</div>
+      </section>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title">
+        <h2>Ghi danh của tôi</h2>
+        <a class="btn" href="my-courses.html">Xem danh sách</a>
+      </div>
+      <table class="table">
+        <thead><tr><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
+        <tbody id="myCourseRows"><tr><td colspan="5">Đăng nhập để xem dữ liệu.</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

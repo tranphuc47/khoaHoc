@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng nhập</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">CM</span>
+        <span>Cổng lưu trữ thông tin khóa học</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Giới thiệu</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học sinh</a>
+        <a href="teacher.html" data-nav>Giáo viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn" href="register.html">Tài khoản</a>
+        <a class="btn red" href="login.html">Đăng nhập</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Đăng nhập</div>
+    <section class="hero-strip">
+      <div>
+        <div class="eyebrow">Tài khoản</div>
+        <h1>Đăng nhập hệ thống</h1>
+      </div>
+    </section>
+
+    <section class="auth-layout">
+      <div class="intro-panel">
+        <h2>Cổng học liệu số</h2>
+        <p>Đăng nhập để xem khóa học của tôi, đăng ký khóa học và sử dụng các chức năng cần tài khoản.</p>
+        <p>Trang này là một file HTML riêng, không gộp chung với trang chủ hoặc trang khóa học.</p>
+      </div>
+      <div class="auth-card">
+        <h2>Đăng nhập</h2>
+        <form id="loginForm" class="form-stack">
+          <input class="field" name="username" placeholder="Tên đăng nhập" required>
+          <input class="field" name="password" type="password" placeholder="Mật khẩu" required>
+          <button class="btn red" type="submit">Đăng nhập</button>
+          <a class="btn" href="register.html">Tạo tài khoản</a>
+        </form>
+        <div id="loginMessage" class="message"></div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
