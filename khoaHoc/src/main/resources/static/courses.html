@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khóa học - Cổng quản lý khóa học</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+        <nav class="main-nav">
+            <a href="index.html" data-nav>Trang chủ</a>
+            <a href="courses.html" data-nav>Khóa học</a>
+            <a href="my-courses.html" data-nav data-role="STUDENT">Khóa của tôi</a>
+            <a href="teacher.html" data-nav data-role="INSTRUCTOR">Giảng viên</a>
+            <a href="admin.html" data-nav data-role="ADMIN">Quản trị</a>
+        </nav>
+        <div class="header-actions">
+            <a class="btn" href="login.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="register.html" data-guest-only>Đăng ký</a>
+            <a class="btn" href="my-courses.html" data-auth-only style="display:none">
+                <span data-username>Tài khoản</span>
+            </a>
+            <button class="btn red" data-logout data-auth-only style="display:none">Đăng xuất</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="breadcrumb">Trang chủ › Khóa học</div>
+
+    <section class="hero-strip">
+        <div>
+            <div class="eyebrow">Danh mục khóa học</div>
+            <h1>Tìm khóa học phù hợp với bạn</h1>
+        </div>
+        <div class="stats">
+            <div class="stat"><div><strong id="statTotal">0</strong><span>khóa học</span></div></div>
+        </div>
+    </section>
+
+    <section class="panel" style="margin-top:20px">
+        <form class="filters" id="filterForm">
+            <input class="field" type="text" id="keyword" placeholder="Tìm theo tên khóa học...">
+            <select class="field" id="categorySelect">
+                <option value="">Tất cả danh mục</option>
+            </select>
+            <select class="field" id="sortSelect">
+                <option value="createdAt,desc">Mới nhất</option>
+                <option value="title,asc">Tên A-Z</option>
+                <option value="price,asc">Giá tăng dần</option>
+                <option value="price,desc">Giá giảm dần</option>
+            </select>
+            <button class="btn search" type="submit">🔍</button>
+        </form>
+    </section>
+
+    <section style="margin-top:20px">
+        <div class="course-grid" id="courseGrid">
+            <div class="empty-state">Đang tải khóa học...</div>
+        </div>
+    </section>
+
+    <div class="pager" id="pager"></div>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -36,15 +36,14 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                // ===== Cho phép truy cập file tĩnh (HTML/CSS/JS) không cần đăng nhập =====
-                        .requestMatchers(
-                                "/", "/index.html", "/login.html", "/register.html",
-                                "/courses.html", "/course-detail.html", "/my-courses.html",
-                                "/teacher.html", "/admin.html", "/management.html",
-                                "/categories.html", "/users.html", "/statistics.html",
-                                "/student.html", "/grade-management.html",
-                                "/assets/**"
-                        ).permitAll()
+                                .requestMatchers(
+                                        "/", "/*.html", "/css/**", "/js/**", "/images/**", "/assets/**",
+                                        "/index.html", "/login.html", "/register.html",
+                                        "/courses.html", "/course-detail.html", "/my-courses.html",
+                                        "/teacher.html", "/admin.html", "/management.html",
+                                        "/categories.html", "/users.html", "/statistics.html",
+                                        "/student.html", "/grade-management.html"
+                                ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Whitelist đầy đủ các đường dẫn Swagger (thiếu swagger-ui.html là nguyên nhân gây lỗi 403)
                         .requestMatchers(

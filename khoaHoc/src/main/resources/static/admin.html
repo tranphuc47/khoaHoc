@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị hệ thống</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+        <nav class="main-nav">
+            <a href="index.html" data-nav>Trang chủ</a>
+            <a href="courses.html" data-nav>Khóa học</a>
+            <a href="my-courses.html" data-nav data-role="STUDENT">Khóa của tôi</a>
+            <a href="teacher.html" data-nav data-role="INSTRUCTOR">Giảng viên</a>
+            <a href="admin.html" data-nav data-role="ADMIN">Quản trị</a>
+        </nav>
+        <div class="header-actions">
+            <a class="btn" href="login.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="register.html" data-guest-only>Đăng ký</a>
+            <a class="btn" href="my-courses.html" data-auth-only style="display:none"><span data-username>Tài khoản</span></a>
+            <button class="btn red" data-logout data-auth-only style="display:none">Đăng xuất</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="breadcrumb">Trang chủ › Quản trị</div>
+    <section class="hero-strip">
+        <div><div class="eyebrow">Quản trị viên</div><h1>Bảng điều khiển hệ thống</h1></div>
+    </section>
+
+    <section class="panel" style="margin-top:20px">
+        <div class="tabs">
+            <button class="active" data-admintab="users">Người dùng</button>
+            <button data-admintab="categories">Danh mục</button>
+            <button data-admintab="stats">Thống kê</button>
+        </div>
+
+        <!-- TAB: Người dùng -->
+        <div id="admintab-users">
+            <table class="table">
+                <thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Vai trò</th><th>Email</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody id="userRows"><tr><td colspan="6">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- TAB: Danh mục -->
+        <div id="admintab-categories" style="display:none">
+            <form class="filters" id="createCategoryForm" style="grid-template-columns: 1fr 1fr 120px">
+                <input class="field" id="catName" placeholder="Tên danh mục" required>
+                <input class="field" id="catDescription" placeholder="Mô tả (tùy chọn)">
+                <button class="btn red" type="submit">Thêm</button>
+            </form>
+            <div class="message" id="categoryMessage"></div>
+            <table class="table" style="margin-top:16px">
+                <thead><tr><th>Tên danh mục</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                <tbody id="categoryRows"><tr><td colspan="3">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- TAB: Thống kê -->
+        <div id="admintab-stats" style="display:none">
+            <div class="metric-grid" id="statsGrid">
+                <div class="empty-state" style="grid-column:1/-1">Đang tải thống kê...</div>
+            </div>
+            <table class="table">
+                <thead><tr><th>Khóa học</th><th>Tổng ghi danh</th><th>Đang học</th><th>Hoàn thành</th><th>Đã hủy</th></tr></thead>
+                <tbody id="statsRows"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Cổng quản lý khóa học</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+        <nav class="main-nav">
+            <a href="index.html" data-nav>Trang chủ</a>
+            <a href="courses.html" data-nav>Khóa học</a>
+        </nav>
+        <div class="header-actions">
+            <a class="btn" href="login.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="register.html" data-guest-only>Đăng ký</a>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="breadcrumb">Trang chủ › Đăng nhập</div>
+
+    <section class="auth-layout">
+        <div class="intro-panel">
+            <div class="eyebrow">Chào mừng trở lại</div>
+            <h1>Đăng nhập hệ thống</h1>
+            <p>Dùng chung 1 tài khoản cho cả Học viên, Giảng viên và Quản trị viên.
+                Hệ thống sẽ tự động đưa bạn tới đúng khu vực làm việc sau khi đăng nhập thành công.</p>
+        </div>
+
+        <div class="auth-card">
+            <h2>Đăng nhập</h2>
+            <form class="form-stack" id="loginForm">
+                <input class="field" type="text" id="username" placeholder="Tên đăng nhập" required>
+                <input class="field" type="password" id="password" placeholder="Mật khẩu" required>
+                <button class="btn red" type="submit">Đăng nhập</button>
+            </form>
+            <div class="message" id="loginMessage"></div>
+            <p style="margin-top:16px;color:var(--muted)">
+                Chưa có tài khoản? <a href="register.html" style="color:var(--blue);font-weight:800">Đăng ký ngay</a>
+            </p>
+        </div>
+    </section>
+</main>
+
+<script src="js/app.js"></script>
+</body>
+</html>
