@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý danh mục</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><button class="btn red" data-logout>Đăng xuất</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Quản lý › Danh mục</div>
+    <section class="hero-strip">
+      <div><h1>Quản lý danh mục khóa học</h1></div>
+      <div class="stats"><div class="stat"><div><strong id="categoryCount">0</strong><span>danh mục</span></div></div></div>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title"><h2>Quản lý hệ thống</h2><span class="count">Danh mục dùng để phân loại khóa học</span></div>
+      <div class="tabs">
+        <a href="management.html">Khóa học</a>
+        <a class="active" href="categories.html">Danh mục</a>
+        <a href="teacher.html">Giảng viên</a>
+        <a href="statistics.html">Thống kê</a>
+      </div>
+      <form id="categoryForm" class="form-grid">
+        <input class="field" name="name" placeholder="Tên danh mục" required>
+        <textarea class="field textarea wide" name="description" placeholder="Mô tả danh mục"></textarea>
+        <button class="btn red" type="submit">Tạo danh mục</button>
+      </form>
+      <div id="categoryMessage" class="message"></div>
+    </section>
+
+    <section class="panel" style="margin-top:20px">
+      <div class="section-head"><h2>Danh sách danh mục</h2><span class="count">Dữ liệu danh mục khóa học</span></div>
+      <table class="table">
+        <thead><tr><th>ID</th><th>Tên danh mục</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+        <tbody id="categoryRows"><tr><td colspan="4">Đang tải dữ liệu...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

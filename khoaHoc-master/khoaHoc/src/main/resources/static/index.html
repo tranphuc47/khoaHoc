@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng quản lý khóa học</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn" href="register.html">Tài khoản</a>
+        <a class="btn red" href="login.html">Đăng nhập</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Tổng quan</div>
+    <section class="hero-strip">
+      <div>
+        <div class="eyebrow">Hệ thống quản lý khóa học</div>
+        <h1>Theo dõi khóa học, nội dung học và ghi danh trên một giao diện</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong>5</strong><span>nhóm chức năng</span></div></div>
+        <div class="stat"><div><strong>ID</strong><span>dữ liệu thống nhất</span></div></div>
+      </div>
+    </section>
+
+    <section class="module-map">
+      <article class="module-card">
+        <h2>Thiết kế dữ liệu</h2>
+        <ul>
+          <li>ERD cho User, Role, Category, Course, Chapter, Lesson, Enrollment.</li>
+          <li>Khóa chính thống nhất giữa các bảng.</li>
+          <li>Liên kết 1-nhiều: danh mục - khóa học, khóa học - chương, chương - bài học.</li>
+          <li>Liên kết ghi danh giữa học viên và khóa học.</li>
+        </ul>
+      </article>
+      <article class="module-card">
+        <h2>Auth, Role, JWT</h2>
+        <ul>
+          <li>Đăng ký, đăng nhập và lưu token JWT.</li>
+          <li>Phân quyền ADMIN, INSTRUCTOR, STUDENT.</li>
+          <li>Bảo vệ thao tác quản trị, giảng viên và học viên.</li>
+        </ul>
+      </article>
+      <article class="module-card">
+        <h2>Category</h2>
+        <ul>
+          <li>Xem danh mục trên trang khóa học.</li>
+          <li>Admin tạo và xóa danh mục.</li>
+          <li>Gắn danh mục khi tạo khóa học.</li>
+        </ul>
+      </article>
+      <article class="module-card">
+        <h2>Course</h2>
+        <ul>
+          <li>Danh sách, tìm kiếm và xem chi tiết khóa học.</li>
+          <li>Giảng viên tạo khóa học bản nháp.</li>
+          <li>Theo dõi khóa học phụ trách.</li>
+        </ul>
+      </article>
+      <article class="module-card">
+        <h2>Chapter & Lesson</h2>
+        <ul>
+          <li>Thêm chương theo thứ tự trong khóa học.</li>
+          <li>Thêm bài học, nội dung và video URL.</li>
+          <li>Hiển thị chương trình học ở trang chi tiết.</li>
+        </ul>
+      </article>
+      <article class="module-card">
+        <h2>Enrollment</h2>
+        <ul>
+          <li>Học viên đăng ký và hủy ghi danh.</li>
+          <li>Giảng viên/Admin xem số liệu ghi danh.</li>
+          <li>Thống kê tiến độ theo từng khóa học.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="home-grid">
+      <article class="home-card">
+        <h2>Auth & phân quyền</h2>
+        <p>Đăng ký, đăng nhập JWT, phân quyền STUDENT, INSTRUCTOR và ADMIN cho các thao tác trong hệ thống.</p>
+        <a class="btn blue" href="login.html">Đăng nhập</a>
+      </article>
+      <article class="home-card">
+        <h2>Danh mục & khóa học</h2>
+        <p>Xem danh mục, tìm kiếm khóa học, tạo khóa học bản nháp và xuất bản theo quyền quản trị.</p>
+        <a class="btn" href="courses.html">Xem khóa học</a>
+      </article>
+      <article class="home-card">
+        <h2>Chương & bài học</h2>
+        <p>Chi tiết khóa học hiển thị đầy đủ chương và bài học; giảng viên có thể bổ sung nội dung học.</p>
+        <a class="btn" href="management.html">Quản lý nội dung</a>
+      </article>
+      <article class="home-card">
+        <h2>Ghi danh & tiến độ</h2>
+        <p>Học viên đăng ký/hủy khóa học, giảng viên duyệt ghi danh và xem thống kê tiến độ toàn hệ thống.</p>
+        <a class="btn" href="statistics.html">Xem thống kê</a>
+      </article>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
