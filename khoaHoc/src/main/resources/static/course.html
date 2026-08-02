@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết khóa học</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng khóa học</span></a>
+        <nav class="main-nav">
+            <a href="index.html" data-nav>Khóa học</a>
+            <a href="dashboard.html" data-nav data-auth-only style="display:none">Của tôi</a>
+            <a href="dashboard.html?view=profile" data-nav data-auth-only style="display:none">Hồ sơ</a>
+        </nav>
+        <div class="header-actions">
+            <a class="btn" href="auth.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="auth.html?tab=register" data-guest-only>Đăng ký</a>
+            <span class="btn" data-auth-only style="display:none"><span data-username>Tài khoản</span> <span class="badge gray" data-role-badge></span></span>
+            <button class="btn red" data-logout data-auth-only style="display:none">Đăng xuất</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="panel">
+        <h1 id="courseTitle" style="font-size:24px">Đang tải...</h1>
+        <div class="course-meta" id="courseMeta"></div>
+        <p class="detail-copy" id="courseDescription"></p>
+        <div class="price-box" id="coursePriceBox"></div>
+        <div id="actionArea" style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"></div>
+        <div class="message" id="actionMessage"></div>
+    </div>
+
+    <div class="panel" style="margin-top:16px">
+        <div class="section-head"><h2>Nội dung khóa học</h2></div>
+        <div class="chapter-accordion" id="chapterAccordion">
+            <div class="empty-state">Đang tải nội dung...</div>
+        </div>
+        <div class="lesson-content-box" id="lessonContentBox"></div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="paymentModal" style="display:none">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Chi tiết thanh toán</h3>
+            <button class="modal-close" data-close-modal="paymentModal">&times;</button>
+        </div>
+        <div class="payment-detail" id="paymentDetail">
+            <div class="empty-state">Đang tải...</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn red" data-close-modal="paymentModal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

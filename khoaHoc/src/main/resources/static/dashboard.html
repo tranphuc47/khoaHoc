@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng khóa học</span></a>
+        <nav class="main-nav">
+            <a href="index.html" data-nav>Khóa học</a>
+            <a href="dashboard.html" data-nav data-auth-only style="display:none">Của tôi</a>
+            <a href="dashboard.html?view=profile" data-nav data-auth-only style="display:none">Hồ sơ</a>
+        </nav>
+        <div class="header-actions">
+            <a class="btn" href="auth.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="auth.html?tab=register" data-guest-only>Đăng ký</a>
+            <span class="btn" data-auth-only style="display:none"><span data-username>Tài khoản</span> <span class="badge gray" data-role-badge></span></span>
+            <button class="btn red" data-logout data-auth-only style="display:none">Đăng xuất</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+
+    <!-- ====== HỒ SƠ (mọi role) ====== -->
+    <div class="dash-view" id="view-profile">
+        <div class="role-grid">
+            <div class="profile-card">
+                <div class="profile-avatar" id="profileAvatar">?</div>
+                <h2 id="profileFullName">—</h2>
+                <p class="badge gray" id="profileRole">—</p>
+                <div class="profile-list" style="margin-top:16px">
+                    <div><strong>Tài khoản:</strong> <span id="profileUsername">—</span></div>
+                    <div><strong>Email:</strong> <span id="profileEmail">—</span></div>
+                    <div><strong>Điện thoại:</strong> <span id="profilePhone">—</span></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="tabs inner-tabs">
+                    <button class="active" data-ptab="info">Cập nhật thông tin</button>
+                    <button data-ptab="password">Đổi mật khẩu</button>
+                </div>
+                <div id="ptab-info">
+                    <form class="form-stack" id="profileForm">
+                        <input class="field" id="pfFullName" placeholder="Họ và tên" required>
+                        <input class="field" id="pfPhone" placeholder="Số điện thoại">
+                        <button class="btn red" type="submit">Lưu thay đổi</button>
+                    </form>
+                    <div class="message" id="profileMessage"></div>
+                </div>
+                <div id="ptab-password" style="display:none">
+                    <form class="form-stack" id="passwordForm">
+                        <input class="field" id="pwOld" type="password" placeholder="Mật khẩu hiện tại" required>
+                        <input class="field" id="pwNew" type="password" placeholder="Mật khẩu mới (tối thiểu 6 ký tự)" required minlength="6">
+                        <input class="field" id="pwConfirm" type="password" placeholder="Xác nhận mật khẩu mới" required>
+                        <button class="btn red" type="submit">Đổi mật khẩu</button>
+                    </form>
+                    <div class="message" id="passwordMessage"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== STUDENT ====== -->
+    <div class="dash-view" id="view-student">
+        <div class="panel">
+            <div class="section-head"><h2>Khóa học của tôi</h2></div>
+            <table class="table">
+                <thead><tr><th>Khóa học</th><th>Trạng thái</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
+                <tbody id="studentRows"><tr><td colspan="4">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====== INSTRUCTOR ====== -->
+    <div class="dash-view" id="view-instructor">
+        <div class="panel">
+            <div class="tabs">
+                <button class="active" data-itab="list">Khóa học của tôi</button>
+                <button data-itab="create">Tạo khóa học</button>
+                <button data-itab="content">Quản lý nội dung</button>
+            </div>
+
+            <div id="itab-list">
+                <table class="table">
+                    <thead><tr><th>Khóa học</th><th>Danh mục</th><th>Trạng thái</th><th>Học viên</th><th>Thao tác</th></tr></thead>
+                    <tbody id="instructorCourseRows"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div id="itab-create" style="display:none">
+                <form class="form-grid" id="createCourseForm">
+                    <input class="field wide" id="cTitle" placeholder="Tên khóa học" required>
+                    <textarea class="field textarea wide" id="cDescription" placeholder="Mô tả"></textarea>
+                    <select class="field" id="cCategory" required><option value="">Chọn danh mục</option></select>
+                    <input class="field" id="cPrice" type="number" min="0" placeholder="Học phí (0 = miễn phí)" required>
+                    <button class="btn red" type="submit">Tạo khóa học</button>
+                </form>
+                <div class="message" id="createCourseMessage"></div>
+            </div>
+
+            <div id="itab-content" style="display:none">
+                <div class="section-head">
+                    <h2 style="font-size:18px;margin:0">Chương &amp; bài học</h2>
+                    <select class="field" id="contentCourseSelect" style="max-width:320px">
+                        <option value="">Chọn khóa học...</option>
+                    </select>
+                </div>
+                <div id="chapterManager" class="content-manager">
+                    <div class="empty-state">Chọn khóa học để quản lý nội dung</div>
+                </div>
+                <form class="inline-form" id="addChapterForm" style="display:none">
+                    <input class="field" id="newChapterTitle" placeholder="Tên chương mới" required>
+                    <input class="field" id="newChapterOrder" type="number" min="1" placeholder="Thứ tự" style="max-width:100px">
+                    <button class="btn blue" type="submit">+ Thêm chương</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px" id="instructorEnrollmentPanel">
+            <div class="section-head"><h2>Học viên đăng ký</h2><span class="count" id="selectedCourseName">Chọn 1 khóa ở bảng trên</span></div>
+            <table class="table">
+                <thead><tr><th>Học viên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                <tbody id="enrollmentRows"><tr><td colspan="3">Chưa chọn khóa học</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ====== ADMIN ====== -->
+    <div class="dash-view" id="view-admin">
+        <div class="panel">
+            <div class="tabs">
+                <button class="active" data-atab="courses">Duyệt khóa học</button>
+                <button data-atab="users">Người dùng</button>
+                <button data-atab="categories">Danh mục</button>
+                <button data-atab="stats">Thống kê</button>
+            </div>
+
+            <div id="atab-courses">
+                <table class="table">
+                    <thead><tr><th>Khóa học</th><th>Giảng viên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+                    <tbody id="adminCourseRows"><tr><td colspan="4">Đang tải...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div id="atab-users" style="display:none">
+                <table class="table">
+                    <thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Vai trò</th><th>Trạng thái</th><th></th></tr></thead>
+                    <tbody id="userRows"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div id="atab-categories" style="display:none">
+                <form class="filters" id="createCategoryForm" style="grid-template-columns:1fr 1fr 120px">
+                    <input class="field" id="catName" placeholder="Tên danh mục" required>
+                    <input class="field" id="catDescription" placeholder="Mô tả">
+                    <button class="btn red" type="submit">Thêm</button>
+                </form>
+                <div class="message" id="categoryMessage"></div>
+                <table class="table" style="margin-top:14px">
+                    <thead><tr><th>Tên</th><th>Mô tả</th><th>Thao tác</th></tr></thead>
+                    <tbody id="categoryRows"></tbody>
+                </table>
+            </div>
+
+            <div id="atab-stats" style="display:none">
+                <div class="metric-grid" id="statsGrid"></div>
+                <table class="table">
+                    <thead><tr><th>Khóa học</th><th>Tổng</th><th>Đang học</th><th>Hoàn thành</th><th>Đã hủy</th></tr></thead>
+                    <tbody id="statsRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Modal sửa khóa học -->
+<div class="modal-overlay" id="editCourseModal" style="display:none">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Sửa khóa học</h3>
+            <button class="modal-close" data-close-modal="editCourseModal">&times;</button>
+        </div>
+        <form class="form-stack" id="editCourseForm">
+            <input type="hidden" id="editCourseId">
+            <input class="field" id="editTitle" placeholder="Tên khóa học" required>
+            <textarea class="field textarea" id="editDescription" placeholder="Mô tả"></textarea>
+            <select class="field" id="editCategory"><option value="">Chọn danh mục</option></select>
+            <input class="field" id="editPrice" type="number" min="0" placeholder="Học phí">
+            <select class="field" id="editStatus">
+                <option value="DRAFT">DRAFT</option>
+                <option value="PUBLISHED">PUBLISHED</option>
+                <option value="ARCHIVED">ARCHIVED</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn" type="button" data-close-modal="editCourseModal">Hủy</button>
+                <button class="btn red" type="submit">Lưu</button>
+            </div>
+        </form>
+        <div class="message" id="editCourseMessage"></div>
+    </div>
+</div>
+
+<!-- Modal sửa danh mục -->
+<div class="modal-overlay" id="editCategoryModal" style="display:none">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Sửa danh mục</h3>
+            <button class="modal-close" data-close-modal="editCategoryModal">&times;</button>
+        </div>
+        <form class="form-stack" id="editCategoryForm">
+            <input type="hidden" id="editCatId">
+            <input class="field" id="editCatName" placeholder="Tên danh mục" required>
+            <input class="field" id="editCatDescription" placeholder="Mô tả">
+            <div class="modal-actions">
+                <button class="btn" type="button" data-close-modal="editCategoryModal">Hủy</button>
+                <button class="btn red" type="submit">Lưu</button>
+            </div>
+        </form>
+        <div class="message" id="editCategoryMessage"></div>
+    </div>
+</div>
+
+<!-- Modal chi tiết thanh toán -->
+<div class="modal-overlay" id="paymentModal" style="display:none">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Chi tiết thanh toán</h3>
+            <button class="modal-close" data-close-modal="paymentModal">&times;</button>
+        </div>
+        <div class="payment-detail" id="paymentDetail">
+            <div class="empty-state">Đang tải...</div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn red" data-close-modal="paymentModal">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

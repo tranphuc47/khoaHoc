@@ -3,82 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chủ - Cổng quản lý khóa học</title>
+    <title>Cổng quản lý khóa học</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="app-header">
     <div class="header-inner">
-        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+        <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng khóa học</span></a>
         <nav class="main-nav">
-            <a href="index.html" data-nav>Trang chủ</a>
-            <a href="courses.html" data-nav>Khóa học</a>
-            <a href="my-courses.html" data-nav data-role="STUDENT">Khóa của tôi</a>
-            <a href="teacher.html" data-nav data-role="INSTRUCTOR">Giảng viên</a>
-            <a href="admin.html" data-nav data-role="ADMIN">Quản trị</a>
+            <a href="index.html" data-nav>Khóa học</a>
+            <a href="dashboard.html" data-nav data-auth-only style="display:none">Của tôi</a>
+            <a href="dashboard.html?view=profile" data-nav data-auth-only style="display:none">Hồ sơ</a>
         </nav>
         <div class="header-actions">
-            <a class="btn" href="login.html" data-guest-only>Đăng nhập</a>
-            <a class="btn red" href="register.html" data-guest-only>Đăng ký</a>
-            <a class="btn" href="my-courses.html" data-auth-only style="display:none">
-                <span data-username>Tài khoản</span>
-            </a>
+            <a class="btn" href="auth.html" data-guest-only>Đăng nhập</a>
+            <a class="btn red" href="auth.html?tab=register" data-guest-only>Đăng ký</a>
+            <span class="btn" data-auth-only style="display:none"><span data-username>Tài khoản</span> <span class="badge gray" data-role-badge></span></span>
             <button class="btn red" data-logout data-auth-only style="display:none">Đăng xuất</button>
         </div>
     </div>
 </header>
 
 <main class="page">
-    <section class="hero-strip">
-        <div>
-            <div class="eyebrow">Hệ thống quản lý khóa học</div>
-            <h1>Học mọi lúc, dạy mọi nơi</h1>
-        </div>
-        <div class="stats">
-            <div class="stat"><div><strong id="statCourseCount">0</strong><span>khóa học</span></div></div>
-            <div class="stat"><div><strong id="statCategoryCount">0</strong><span>danh mục</span></div></div>
-        </div>
-    </section>
+    <div class="category-tabs" id="categoryTabs">
+        <button class="active" data-cat="">Tất cả</button>
+    </div>
 
-    <section class="home-grid">
-        <div class="module-card">
-            <span>Học viên</span>
-            <h2>Đăng ký & học</h2>
-            <ul>
-                <li>Xem danh sách khóa học</li>
-                <li>Đăng ký, theo dõi tiến độ</li>
-                <li>Xem điểm và chứng nhận</li>
-            </ul>
-        </div>
-        <div class="module-card">
-            <span>Giảng viên</span>
-            <h2>Tạo & quản lý nội dung</h2>
-            <ul>
-                <li>Tạo khóa học, chương, bài học</li>
-                <li>Duyệt học viên đăng ký</li>
-                <li>Chấm điểm, xem thống kê</li>
-            </ul>
-        </div>
-        <div class="module-card">
-            <span>Quản trị</span>
-            <h2>Vận hành hệ thống</h2>
-            <ul>
-                <li>Quản lý người dùng</li>
-                <li>Quản lý danh mục</li>
-                <li>Thống kê toàn hệ thống</li>
-            </ul>
-        </div>
-    </section>
+    <div class="search-toolbar">
+        <input class="field" id="searchInput" placeholder="Tìm khóa học...">
+        <select class="field" id="sortSelect">
+            <option value="createdAt,desc">Mới nhất</option>
+            <option value="price,asc">Giá tăng dần</option>
+            <option value="price,desc">Giá giảm dần</option>
+        </select>
+    </div>
 
-    <section class="my-courses">
-        <div class="my-courses-title">
-            <h2>Khóa học nổi bật</h2>
-            <a class="btn" href="courses.html">Xem tất cả</a>
-        </div>
-        <div class="course-grid" id="featuredCourses">
-            <div class="empty-state">Đang tải khóa học...</div>
-        </div>
-    </section>
+    <div class="course-grid" id="courseGrid">
+        <div class="empty-state">Đang tải khóa học...</div>
+    </div>
+
+    <div class="pager" id="pager"></div>
 </main>
 
 <script src="js/app.js"></script>

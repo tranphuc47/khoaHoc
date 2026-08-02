@@ -23,6 +23,7 @@ public class EmailService {
                                         BigDecimal amount, String transactionCode) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("trandinhphuc3003@gmail.com");  // email cùng với spring.mail.username
             message.setTo(toEmail);
             message.setSubject("Xác nhận thanh toán khóa học thành công");
             message.setText(String.format(

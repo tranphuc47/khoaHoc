@@ -29,6 +29,11 @@ public class CourseService {
                 .map(c -> toResponse(c, false));
     }
 
+    // Admin xem toàn bộ khóa học (mọi trạng thái) để duyệt DRAFT -> PUBLISHED
+    public Page<CourseResponse> getAllForAdmin(Pageable pageable) {
+        return courseRepository.findAll(pageable).map(c -> toResponse(c, false));
+    }
+
     // ===== STT 2: Lấy khóa học theo ID (public) — kèm chapters + lessons bên trong =====
     public CourseResponse getById(Integer id) {
         Course course = findEntity(id);

@@ -1,61 +1,96 @@
 // ============================================================
-// app.js — Logic dùng chung cho toàn bộ frontend
-// Vì file HTML nằm trong src/main/resources/static của Spring Boot,
-// nên gọi API cùng domain, không cần ghi domain đầy đủ.
+// app.js — Logic dùng chung cho 4 trang: index / auth / course / dashboard
 // ============================================================
 const API_BASE = '';
 
-// Gọi API kèm sẵn Authorization header nếu đã đăng nhập — dùng cho mọi trang cần login
+// ---------- Helper dùng chung ----------
 async function authFetch(url, options = {}) {
     const token = localStorage.getItem('accessToken');
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    return fetch(url, { ...options, headers });
+    const res = await fetch(url, { ...options, headers });
+    if (res.status === 401) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('username');
+        localStorage.removeItem('role');
+        window.location.href = 'auth.html';
+        throw new Error('Unauthorized');
+    }
+    return res;
 }
 
 function requireLogin() {
-    if (!localStorage.getItem('accessToken')) {
-        window.location.href = 'login.html';
-        return false;
-    }
+    if (!localStorage.getItem('accessToken')) { window.location.href = 'auth.html'; return false; }
     return true;
 }
 
-function statusBadge(status) {
-    const map = {
-        PENDING: 'gray', ACTIVE: 'green', COMPLETED: 'green', CANCELLED: 'red',
-        DRAFT: 'gray', PUBLISHED: 'green', ARCHIVED: 'red'
-    };
-    const cls = map[status] || 'gray';
-    return `<span class="badge ${cls}">${status}</span>`;
+function formatCurrency(v) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v);
 }
 
-// ---------- 1. Quản lý trạng thái đăng nhập (chạy ở MỌI trang) ----------
+function getQueryParam(name) {
+    return new URLSearchParams(window.location.search).get(name);
+}
+
+function statusBadge(status) {
+    const map = { PENDING: 'gray', ACTIVE: 'green', COMPLETED: 'green', CANCELLED: 'red', DRAFT: 'gray', PUBLISHED: 'green', ARCHIVED: 'red', PAID: 'green' };
+    return `<span class="badge ${map[status] || 'gray'}">${status}</span>`;
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function debounce(fn, delay) {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(() => el.classList.add('show'), 10);
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3000);
+}
+
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'flex';
+}
+
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+}
+
+function initModals() {
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.style.display = 'none';
+        });
+    });
+}
+
+// ---------- 1. Auth UI (mọi trang) ----------
 function initAuthUI() {
     const token = localStorage.getItem('accessToken');
     const username = localStorage.getItem('username');
     const role = localStorage.getItem('role');
 
-    const guestEls = document.querySelectorAll('[data-guest-only]');
-    const authEls = document.querySelectorAll('[data-auth-only]');
-    const usernameEls = document.querySelectorAll('[data-username]');
-    const roleNavEls = document.querySelectorAll('[data-nav][data-role]');
-
-    if (token) {
-        guestEls.forEach(el => el.style.display = 'none');
-        authEls.forEach(el => el.style.display = '');
-        usernameEls.forEach(el => el.textContent = username || 'Tài khoản');
-        roleNavEls.forEach(el => {
-            el.style.display = (el.dataset.role === role) ? '' : 'none';
-        });
-    } else {
-        guestEls.forEach(el => el.style.display = '');
-        authEls.forEach(el => el.style.display = 'none');
-        roleNavEls.forEach(el => el.style.display = 'none');
-    }
+    document.querySelectorAll('[data-guest-only]').forEach(el => el.style.display = token ? 'none' : '');
+    document.querySelectorAll('[data-auth-only]').forEach(el => el.style.display = token ? '' : 'none');
+    document.querySelectorAll('[data-username]').forEach(el => el.textContent = username || 'Tài khoản');
+    document.querySelectorAll('[data-role-badge]').forEach(el => el.textContent = role || '');
 
     document.querySelectorAll('[data-logout]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
+            try { await authFetch(`${API_BASE}/api/auth/logout`, { method: 'POST' }); } catch (_) {}
             localStorage.removeItem('accessToken');
             localStorage.removeItem('username');
             localStorage.removeItem('role');
@@ -64,659 +99,907 @@ function initAuthUI() {
     });
 
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const view = getQueryParam('view');
     document.querySelectorAll('[data-nav]').forEach(a => {
-        if (a.getAttribute('href') === currentPage) a.classList.add('active');
+        const href = a.getAttribute('href') || '';
+        const isProfile = view === 'profile' && href.includes('view=profile');
+        const isPage = href === currentPage || (currentPage === 'dashboard.html' && href === 'dashboard.html' && !view && !href.includes('view='));
+        if (isProfile || (isPage && !href.includes('view=profile'))) a.classList.add('active');
     });
 }
 
-// ---------- 2. Trang login.html ----------
-function initLoginPage() {
-    const form = document.getElementById('loginForm');
-    if (!form) return; // không phải trang login thì bỏ qua
+// ---------- 2. Trang auth.html ----------
+function initAuthPage() {
+    const loginForm = document.getElementById('loginForm');
+    if (!loginForm) return;
 
-    const messageEl = document.getElementById('loginMessage');
+    const tabBtns = document.querySelectorAll('[data-authtab]');
+    const registerForm = document.getElementById('registerForm');
 
-    form.addEventListener('submit', async (e) => {
+    function showTab(tab) {
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.authtab === tab));
+        loginForm.style.display = tab === 'login' ? '' : 'none';
+        registerForm.style.display = tab === 'register' ? '' : 'none';
+    }
+
+    tabBtns.forEach(btn => btn.addEventListener('click', () => showTab(btn.dataset.authtab)));
+    showTab(getQueryParam('tab') === 'register' ? 'register' : 'login');
+
+    loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        messageEl.textContent = '';
-        messageEl.classList.remove('ok');
-
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
+        const msg = document.getElementById('loginMessage');
+        msg.textContent = ''; msg.classList.remove('ok');
 
         try {
             const res = await fetch(`${API_BASE}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('loginUsername').value.trim(),
+                    password: document.getElementById('loginPassword').value
+                })
             });
-
-            if (!res.ok) {
-                messageEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu';
-                return;
-            }
-
+            if (res.status === 403) { msg.textContent = 'Tài khoản đã bị khóa'; return; }
+            if (!res.ok) { msg.textContent = 'Sai tên đăng nhập hoặc mật khẩu'; return; }
             const data = await res.json();
             localStorage.setItem('accessToken', data.accessToken);
             localStorage.setItem('username', data.username);
             localStorage.setItem('role', data.role || 'STUDENT');
-
-            messageEl.textContent = 'Đăng nhập thành công, đang chuyển hướng...';
-            messageEl.classList.add('ok');
-
-            // Điều hướng theo vai trò
-            setTimeout(() => {
-                if (data.role === 'ADMIN') window.location.href = 'admin.html';
-                else if (data.role === 'INSTRUCTOR') window.location.href = 'teacher.html';
-                else window.location.href = 'index.html';
-            }, 500);
-
-        } catch (err) {
-            messageEl.textContent = 'Không thể kết nối tới máy chủ';
-        }
+            msg.textContent = 'Đăng nhập thành công...'; msg.classList.add('ok');
+            setTimeout(() => window.location.href = (data.role === 'STUDENT' ? 'index.html' : 'dashboard.html'), 400);
+        } catch { msg.textContent = 'Không thể kết nối máy chủ'; }
     });
-}
 
-// ---------- 3. Trang register.html ----------
-function initRegisterPage() {
-    const form = document.getElementById('registerForm');
-    if (!form) return;
-
-    const messageEl = document.getElementById('registerMessage');
-
-    form.addEventListener('submit', async (e) => {
+    registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        messageEl.textContent = '';
-        messageEl.classList.remove('ok');
+        const msg = document.getElementById('registerMessage');
+        msg.textContent = ''; msg.classList.remove('ok');
 
         const body = {
-            username: document.getElementById('username').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            password: document.getElementById('password').value,
-            fullName: document.getElementById('fullName').value.trim(),
-            phone: document.getElementById('phone').value.trim()
+            username: document.getElementById('regUsername').value.trim(),
+            email: document.getElementById('regEmail').value.trim(),
+            password: document.getElementById('regPassword').value,
+            fullName: document.getElementById('regFullName').value.trim(),
+            phone: document.getElementById('regPhone').value.trim()
         };
 
         try {
             const res = await fetch(`${API_BASE}/api/auth/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
             });
-
             const text = await res.text();
-
-            if (!res.ok) {
-                messageEl.textContent = text || 'Đăng ký thất bại';
-                return;
-            }
-
-            messageEl.textContent = 'Đăng ký thành công! Đang chuyển tới trang đăng nhập...';
-            messageEl.classList.add('ok');
-            setTimeout(() => window.location.href = 'login.html', 1000);
-
-        } catch (err) {
-            messageEl.textContent = 'Không thể kết nối tới máy chủ';
-        }
+            if (!res.ok) { msg.textContent = text || 'Đăng ký thất bại'; return; }
+            msg.textContent = 'Đăng ký thành công! Chuyển sang đăng nhập...'; msg.classList.add('ok');
+            setTimeout(() => showTab('login'), 900);
+        } catch { msg.textContent = 'Không thể kết nối máy chủ'; }
     });
 }
 
-// ---------- 4. Trang index.html — tải khóa học nổi bật ----------
-async function loadFeaturedCourses() {
-    const container = document.getElementById('featuredCourses');
+// ---------- 3. Trang index.html ----------
+let idxState = { page: 0, size: 9, keyword: '', categoryId: '', sort: 'createdAt,desc' };
+
+function renderPriceBox(price) {
+    if (!price || price <= 0) return `<span class="price-free">Miễn phí</span>`;
+    return `<span class="price-sale">${formatCurrency(price)}</span>`;
+}
+
+function renderCourseCard(c) {
+    return `
+    <a class="course-card" href="course.html?id=${c.id}" style="display:block">
+      <div class="course-thumb">${(c.title || '?').charAt(0).toUpperCase()}</div>
+      <div class="course-body">
+        <h3>${escapeHtml(c.title)}</h3>
+        <p>${escapeHtml(c.categoryName || 'Chưa phân loại')}</p>
+        <div class="price-box">${renderPriceBox(c.price)}</div>
+      </div>
+    </a>`;
+}
+
+async function initIndexPage() {
+    const grid = document.getElementById('courseGrid');
+    if (!grid) return;
+
+    await loadCategoryTabs();
+
+    document.getElementById('searchInput').addEventListener('input', debounce(() => {
+        idxState.page = 0;
+        idxState.keyword = document.getElementById('searchInput').value.trim();
+        loadCourseList();
+    }, 400));
+
+    document.getElementById('sortSelect').addEventListener('change', () => {
+        idxState.sort = document.getElementById('sortSelect').value;
+        loadCourseList();
+    });
+
+    loadCourseList();
+}
+
+async function loadCategoryTabs() {
+    const container = document.getElementById('categoryTabs');
     if (!container) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/categories?size=50`);
+        const data = await res.json();
+        (data.content || []).forEach(c => {
+            const btn = document.createElement('button');
+            btn.textContent = c.name; btn.dataset.cat = c.id;
+            container.appendChild(btn);
+        });
+        container.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                idxState.page = 0; idxState.categoryId = btn.dataset.cat;
+                loadCourseList();
+            });
+        });
+    } catch (err) { console.error(err); }
+}
+
+async function loadCourseList() {
+    const grid = document.getElementById('courseGrid');
+    grid.innerHTML = '<div class="empty-state">Đang tải khóa học...</div>';
+    try {
+        let url = idxState.keyword
+            ? `${API_BASE}/api/courses/search?keyword=${encodeURIComponent(idxState.keyword)}&page=${idxState.page}&size=${idxState.size}&sort=${idxState.sort}`
+            : `${API_BASE}/api/courses?page=${idxState.page}&size=${idxState.size}&sort=${idxState.sort}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        let courses = data.content || [];
+        if (idxState.categoryId) courses = courses.filter(c => String(c.categoryId) === idxState.categoryId);
+
+        if (courses.length === 0) { grid.innerHTML = '<div class="empty-state">Không có khóa học phù hợp</div>'; document.getElementById('pager').innerHTML = ''; return; }
+
+        grid.innerHTML = courses.map(renderCourseCard).join('');
+        renderPager(data.totalPages || 1, data.number || 0);
+    } catch { grid.innerHTML = '<div class="empty-state">Không thể tải dữ liệu</div>'; }
+}
+
+function renderPager(totalPages, current) {
+    const pager = document.getElementById('pager');
+    if (!pager) return;
+    if (totalPages <= 1) { pager.innerHTML = ''; return; }
+    pager.innerHTML = Array.from({ length: totalPages }, (_, i) =>
+        `<button class="btn ${i === current ? 'blue' : ''}" data-page="${i}">${i + 1}</button>`).join('');
+    pager.querySelectorAll('[data-page]').forEach(b => b.addEventListener('click', () => {
+        idxState.page = parseInt(b.dataset.page, 10); loadCourseList(); window.scrollTo({ top: 0, behavior: 'smooth' });
+    }));
+}
+
+// ---------- 4. Trang course.html ----------
+async function initCoursePage() {
+    const titleEl = document.getElementById('courseTitle');
+    if (!titleEl) return;
+
+    initModals();
+
+    const courseId = getQueryParam('id');
+    if (!courseId) { titleEl.textContent = 'Không tìm thấy khóa học'; return; }
 
     try {
-        const res = await fetch(`${API_BASE}/api/courses?page=0&size=3&sort=createdAt,desc`);
+        const res = await fetch(`${API_BASE}/api/courses/${courseId}`);
+        if (!res.ok) { titleEl.textContent = 'Không tìm thấy khóa học'; return; }
+        const course = await res.json();
+
+        titleEl.textContent = course.title;
+        document.getElementById('courseDescription').textContent = course.description || '';
+        document.getElementById('coursePriceBox').innerHTML = renderPriceBox(course.price);
+        const metaEl = document.getElementById('courseMeta');
+        if (metaEl) {
+            const lessonCount = (course.chapters || []).reduce((s, ch) => s + (ch.lessons || []).length, 0);
+            metaEl.innerHTML = `<span>Giảng viên: <strong>${escapeHtml(course.instructorName || '—')}</strong></span>
+                <span>${(course.chapters || []).length} chương · ${lessonCount} bài</span>`;
+        }
+
+        const enrollment = await findMyEnrollment(courseId);
+        renderActionArea(course, enrollment);
+        renderChapters(course.chapters || [], enrollment && enrollment.status === 'ACTIVE');
+
+    } catch { titleEl.textContent = 'Lỗi tải dữ liệu'; }
+}
+
+async function findMyEnrollment(courseId) {
+    if (!localStorage.getItem('accessToken')) return null;
+    try {
+        const res = await authFetch(`${API_BASE}/api/student/courses?size=100`);
+        if (!res.ok) return null;
         const data = await res.json();
-        const courses = data.content || [];
+        return (data.content || []).find(e => String(e.courseId) === String(courseId)) || null;
+    } catch { return null; }
+}
 
-        if (courses.length === 0) {
-            container.innerHTML = '<div class="empty-state">Chưa có khóa học nào</div>';
-            return;
-        }
+function renderActionArea(course, enrollment) {
+    const area = document.getElementById('actionArea');
+    const token = localStorage.getItem('accessToken');
+    const role = localStorage.getItem('role');
 
-        document.getElementById('statCourseCount').textContent = data.totalElements || courses.length;
+    if (!token) { area.innerHTML = `<a class="btn red" href="auth.html">Đăng nhập để đăng ký</a>`; return; }
+    if (role !== 'STUDENT') { area.innerHTML = ''; return; }
 
-        container.innerHTML = courses.map(c => `
-      <a class="course-card" href="course-detail.html?id=${c.id}" style="display:block">
-        <div class="course-thumb">${(c.title || '?').charAt(0).toUpperCase()}</div>
-        <div class="course-body">
-          <h3>${c.title}</h3>
-          <p>${c.categoryName || 'Chưa phân loại'} · ${c.price > 0 ? formatCurrency(c.price) : 'Miễn phí'}</p>
-        </div>
-      </a>
-    `).join('');
-
-    } catch (err) {
-        container.innerHTML = '<div class="empty-state">Không thể tải khóa học</div>';
+    if (!enrollment) {
+        area.innerHTML = `<button class="btn red" id="enrollBtn">Đăng ký khóa học</button>`;
+        document.getElementById('enrollBtn').addEventListener('click', () => doEnroll(course.id, course.price));
+    } else if (enrollment.status === 'PENDING') {
+        area.innerHTML = `
+            <button class="btn red" id="payBtn">Thanh toán ngay</button>
+            <button class="btn" id="viewPayBtn">Xem thanh toán</button>`;
+        document.getElementById('payBtn').addEventListener('click', () => doPay(enrollment.id));
+        document.getElementById('viewPayBtn').addEventListener('click', () => showPaymentDetail(enrollment.id));
+    } else if (enrollment.status === 'ACTIVE') {
+        area.innerHTML = `<span class="badge green">Đã đăng ký — cuộn xuống để học</span>
+            <button class="btn small" id="viewPayBtn">Chi tiết thanh toán</button>`;
+        const vp = document.getElementById('viewPayBtn');
+        if (vp) vp.addEventListener('click', () => showPaymentDetail(enrollment.id));
     }
 }
 
-function formatCurrency(value) {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+async function doEnroll(courseId, price) {
+    const msg = document.getElementById('actionMessage');
+    const res = await authFetch(`${API_BASE}/api/enrollments`, { method: 'POST', body: JSON.stringify({ courseId: parseInt(courseId, 10) }) });
+    const text = await res.text();
+    if (!res.ok) { msg.textContent = text; return; }
+    const isFree = !price || price <= 0;
+    msg.textContent = isFree ? 'Đăng ký thành công! Bạn có thể học ngay.' : 'Đăng ký thành công! Vui lòng thanh toán để kích hoạt.';
+    msg.classList.add('ok');
+    showToast(isFree ? 'Đăng ký thành công!' : 'Đăng ký thành công — chờ thanh toán');
+    setTimeout(() => location.reload(), 900);
 }
 
-// ---------- Khởi chạy khi trang tải xong ----------
-document.addEventListener('DOMContentLoaded', () => {
-    initAuthUI();
-    initLoginPage();
-    initRegisterPage();
-    loadFeaturedCourses();
-// ---------- 5. Trang courses.html ----------
-    let coursesState = { page: 0, size: 9, keyword: '', categoryId: '', sort: 'createdAt,desc' };
+async function doPay(enrollmentId) {
+    const msg = document.getElementById('actionMessage');
+    if (!confirm('Xác nhận thanh toán khóa học này?')) return;
+    const res = await authFetch(`${API_BASE}/api/enrollments/${enrollmentId}/confirm-payment`, { method: 'POST' });
+    const text = await res.text();
+    if (!res.ok) { msg.textContent = text; return; }
+    msg.textContent = 'Thanh toán thành công! Email xác nhận đã được gửi.';
+    msg.classList.add('ok');
+    showToast('Thanh toán thành công!');
+    await showPaymentDetail(enrollmentId);
+    setTimeout(() => location.reload(), 2000);
+}
 
-    function initCoursesPage() {
-        const grid = document.getElementById('courseGrid');
-        if (!grid) return; // không phải trang courses thì bỏ qua
+async function showPaymentDetail(enrollmentId) {
+    openModal('paymentModal');
+    const box = document.getElementById('paymentDetail');
+    box.innerHTML = '<div class="empty-state">Đang tải...</div>';
+    try {
+        const res = await authFetch(`${API_BASE}/api/enrollments/${enrollmentId}/payment`);
+        if (!res.ok) { box.innerHTML = '<div class="empty-state">Chưa có thông tin thanh toán</div>'; return; }
+        const p = await res.json();
+        box.innerHTML = `
+            <div class="payment-row"><span>Khóa học</span><strong>${escapeHtml(p.courseTitle || '—')}</strong></div>
+            <div class="payment-row"><span>Số tiền</span><strong>${formatCurrency(p.amount || 0)}</strong></div>
+            <div class="payment-row"><span>Mã giao dịch</span><strong>${escapeHtml(p.transactionCode || '—')}</strong></div>
+            <div class="payment-row"><span>Trạng thái</span>${statusBadge(p.status || 'PENDING')}</div>
+            <div class="payment-row"><span>Thời gian</span><strong>${p.paidAt ? new Date(p.paidAt).toLocaleString('vi-VN') : 'Chưa thanh toán'}</strong></div>`;
+    } catch { box.innerHTML = '<div class="empty-state">Không thể tải dữ liệu</div>'; }
+}
 
-        loadCategoriesIntoSelect();
-        loadCourses();
+function renderChapters(chapters, unlocked) {
+    const container = document.getElementById('chapterAccordion');
+    if (chapters.length === 0) { container.innerHTML = '<div class="empty-state">Chưa có nội dung</div>'; return; }
 
-        document.getElementById('filterForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            coursesState.page = 0;
-            coursesState.keyword = document.getElementById('keyword').value.trim();
-            coursesState.categoryId = document.getElementById('categorySelect').value;
-            coursesState.sort = document.getElementById('sortSelect').value;
-            loadCourses();
+    container.innerHTML = chapters.map((ch, ci) => `
+    <div>
+      <div class="chapter-header" data-chapter="${ci}">
+        <span>${escapeHtml(ch.title)}</span><span>▾</span>
+      </div>
+      <div class="chapter-body" id="chapter-body-${ci}">
+        ${(ch.lessons || []).map((l, li) => `
+          <div class="lesson-item ${unlocked ? '' : 'locked'}" data-lesson-title="${escapeHtml(l.title)}" data-lesson-content="${escapeHtml(l.content || 'Chưa có nội dung')}" data-video="${escapeHtml(l.videoUrl || '')}">
+            <span class="lesson-num">${li + 1}</span>
+            <span>${escapeHtml(l.title)}</span>
+            <span style="margin-left:auto">${unlocked ? '' : '🔒'}</span>
+          </div>
+        `).join('') || '<div style="padding:10px 12px;color:var(--muted)">Chưa có bài học</div>'}
+      </div>
+    </div>
+  `).join('');
+
+    container.querySelectorAll('.chapter-header').forEach(h => {
+        h.addEventListener('click', () => {
+            document.getElementById(`chapter-body-${h.dataset.chapter}`).classList.toggle('open');
         });
-    }
+    });
 
-    async function loadCategoriesIntoSelect() {
-        const select = document.getElementById('categorySelect');
-        if (!select) return;
-
-        try {
-            const res = await fetch(`${API_BASE}/api/categories?size=100`);
-            const data = await res.json();
-            const categories = data.content || [];
-            categories.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                select.appendChild(opt);
-            });
-        } catch (err) {
-            console.error('Không tải được danh mục', err);
-        }
-    }
-
-    async function loadCourses() {
-        const grid = document.getElementById('courseGrid');
-        const pager = document.getElementById('pager');
-        grid.innerHTML = '<div class="empty-state">Đang tải khóa học...</div>';
-
-        try {
-            let url;
-            if (coursesState.keyword) {
-                url = `${API_BASE}/api/courses/search?keyword=${encodeURIComponent(coursesState.keyword)}&page=${coursesState.page}&size=${coursesState.size}&sort=${coursesState.sort}`;
-            } else {
-                url = `${API_BASE}/api/courses?page=${coursesState.page}&size=${coursesState.size}&sort=${coursesState.sort}`;
-            }
-
-            const res = await fetch(url);
-            const data = await res.json();
-            let courses = data.content || [];
-
-            // Lọc theo danh mục ở phía client (API search hiện chưa hỗ trợ kết hợp category + keyword cùng lúc)
-            if (coursesState.categoryId) {
-                courses = courses.filter(c => String(c.categoryId) === coursesState.categoryId);
-            }
-
-            document.getElementById('statTotal').textContent = data.totalElements || courses.length;
-
-            if (courses.length === 0) {
-                grid.innerHTML = '<div class="empty-state">Không tìm thấy khóa học phù hợp</div>';
-                pager.innerHTML = '';
-                return;
-            }
-
-            grid.innerHTML = courses.map(c => `
-      <a class="course-card" href="course-detail.html?id=${c.id}" style="display:block">
-        <div class="course-thumb">${(c.title || '?').charAt(0).toUpperCase()}</div>
-        <div class="course-body">
-          <h3>${c.title}</h3>
-          <p>${c.categoryName || 'Chưa phân loại'}</p>
-          <p><strong>${c.price > 0 ? formatCurrency(c.price) : 'Miễn phí'}</strong></p>
-        </div>
-      </a>
-    `).join('');
-
-            renderPager(data.totalPages || 1, data.number || 0);
-
-        } catch (err) {
-            grid.innerHTML = '<div class="empty-state">Không thể tải khóa học, vui lòng thử lại</div>';
-            console.error(err);
-        }
-    }
-
-    function renderPager(totalPages, currentPage) {
-        const pager = document.getElementById('pager');
-        if (!pager || totalPages <= 1) { if (pager) pager.innerHTML = ''; return; }
-
-        let html = '';
-        for (let i = 0; i < totalPages; i++) {
-            html += `<button class="btn ${i === currentPage ? 'blue' : ''}" data-page="${i}">${i + 1}</button>`;
-        }
-        pager.innerHTML = html;
-
-        pager.querySelectorAll('button[data-page]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                coursesState.page = parseInt(btn.dataset.page, 10);
-                loadCourses();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (unlocked) {
+        container.querySelectorAll('.lesson-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const box = document.getElementById('lessonContentBox');
+                const video = item.dataset.video;
+                box.innerHTML = `<h3 style="margin-bottom:8px">${item.dataset.lessonTitle}</h3>
+                    ${video ? `<p><a href="${item.dataset.video}" target="_blank" rel="noopener">▶ Xem video</a></p>` : ''}
+                    <p>${item.dataset.lessonContent}</p>`;
+                box.classList.add('open');
+                box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         });
     }
-// ---------- 6. Trang course-detail.html ----------
-    function getQueryParam(name) {
-        return new URLSearchParams(window.location.search).get(name);
-    }
+}
 
-    async function initCourseDetailPage() {
-        const titleEl = document.getElementById('courseTitle');
-        if (!titleEl) return;
+// ---------- 5. Trang dashboard.html ----------
+function initDashboardPage() {
+    const studentView = document.getElementById('view-student');
+    if (!studentView) return;
+    if (!requireLogin()) return;
 
-        const courseId = getQueryParam('id');
-        if (!courseId) { titleEl.textContent = 'Không tìm thấy khóa học'; return; }
+    initModals();
 
-        try {
-            const res = await fetch(`${API_BASE}/api/courses/${courseId}`);
-            if (!res.ok) { titleEl.textContent = 'Không tìm thấy khóa học'; return; }
-            const course = await res.json();
+    const role = localStorage.getItem('role');
+    const viewProfile = getQueryParam('view') === 'profile';
 
-            document.getElementById('breadcrumbTitle').textContent = course.title;
-            titleEl.textContent = course.title;
-            document.getElementById('courseCategory').textContent = course.categoryName || 'Chưa phân loại';
-            document.getElementById('coursePrice').textContent = course.price > 0 ? formatCurrency(course.price) : 'Miễn phí';
-            document.getElementById('courseDescription').textContent = course.description || 'Chưa có mô tả.';
+    document.getElementById('view-student').classList.toggle('active', !viewProfile && role === 'STUDENT');
+    document.getElementById('view-instructor').classList.toggle('active', !viewProfile && role === 'INSTRUCTOR');
+    document.getElementById('view-admin').classList.toggle('active', !viewProfile && role === 'ADMIN');
+    document.getElementById('view-profile').classList.toggle('active', viewProfile);
 
-            // Render chương/bài học
-            const chapterList = document.getElementById('chapterList');
-            const chapters = course.chapters || [];
-            if (chapters.length === 0) {
-                chapterList.innerHTML = '<div class="empty-state">Chưa có nội dung</div>';
-            } else {
-                chapterList.innerHTML = chapters.map(ch => `
-        <div class="chapter-box">
-          <h3>${ch.title}</h3>
-          <ul>${(ch.lessons || []).map(l => `<li>${l.title}</li>`).join('') || '<li>Chưa có bài học</li>'}</ul>
-        </div>
-      `).join('');
-            }
+    if (viewProfile) { initProfilePage(); loadProfileData(); }
+    else if (role === 'STUDENT') loadStudentDashboard();
+    else if (role === 'INSTRUCTOR') loadInstructorDashboard();
+    else if (role === 'ADMIN') loadAdminDashboard();
+}
 
-            renderEnrollBox(courseId, course.price);
+// -- Profile (mọi role) --
+let profileInited = false;
 
-        } catch (err) {
-            titleEl.textContent = 'Lỗi tải dữ liệu';
-        }
-    }
+function initProfilePage() {
+    if (profileInited) return;
+    profileInited = true;
 
-    function renderEnrollBox(courseId, price) {
-        const box = document.getElementById('enrollBox');
-        const token = localStorage.getItem('accessToken');
-        const role = localStorage.getItem('role');
-
-        if (!token) {
-            box.innerHTML = `<a class="btn red" href="login.html">Đăng nhập để đăng ký khóa học</a>`;
-            return;
-        }
-        if (role !== 'STUDENT') {
-            box.innerHTML = ''; // Giảng viên/Admin không đăng ký học
-            return;
-        }
-
-        box.innerHTML = `<button class="btn red" id="enrollBtn">Đăng ký khóa học${price > 0 ? ' - ' + formatCurrency(price) : ' (Miễn phí)'}</button>`;
-
-        document.getElementById('enrollBtn').addEventListener('click', async () => {
-            const msg = document.getElementById('enrollMessage');
-            msg.textContent = ''; msg.classList.remove('ok');
-            try {
-                const res = await authFetch(`${API_BASE}/api/enrollments`, {
-                    method: 'POST', body: JSON.stringify({ courseId: parseInt(courseId, 10) })
-                });
-                const text = await res.text();
-                if (!res.ok) { msg.textContent = text; return; }
-
-                msg.textContent = 'Đăng ký thành công! Xem tại "Khóa của tôi".';
-                msg.classList.add('ok');
-                box.innerHTML = `<a class="btn" href="my-courses.html">Xem khóa học của tôi</a>`;
-            } catch (err) {
-                msg.textContent = 'Không thể kết nối máy chủ';
-            }
+    document.querySelectorAll('[data-ptab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-ptab]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('ptab-info').style.display = btn.dataset.ptab === 'info' ? '' : 'none';
+            document.getElementById('ptab-password').style.display = btn.dataset.ptab === 'password' ? '' : 'none';
         });
-    }
-// ---------- 7. Trang my-courses.html ----------
-    async function initMyCoursesPage() {
-        const rows = document.getElementById('myCourseRows');
-        if (!rows) return;
-        if (!requireLogin()) return;
+    });
 
-        try {
-            const res = await authFetch(`${API_BASE}/api/student/courses?size=50`);
-            const data = await res.json();
-            const enrollments = data.content || [];
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('profileMessage');
+        const body = {
+            fullName: document.getElementById('pfFullName').value.trim(),
+            phone: document.getElementById('pfPhone').value.trim()
+        };
+        const res = await authFetch(`${API_BASE}/api/users/profile`, { method: 'PUT', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        msg.textContent = 'Cập nhật thành công'; msg.classList.add('ok');
+        showToast('Đã cập nhật hồ sơ');
+        loadProfileData();
+    });
 
-            if (enrollments.length === 0) {
-                rows.innerHTML = '<tr><td colspan="4">Bạn chưa đăng ký khóa học nào. <a href="courses.html">Khám phá ngay</a></td></tr>';
-                return;
-            }
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('passwordMessage');
+        const newPw = document.getElementById('pwNew').value;
+        const confirm = document.getElementById('pwConfirm').value;
+        if (newPw !== confirm) { msg.textContent = 'Mật khẩu xác nhận không khớp'; msg.classList.remove('ok'); return; }
+        const body = { oldPassword: document.getElementById('pwOld').value, newPassword: newPw };
+        const res = await authFetch(`${API_BASE}/api/users/change-password`, { method: 'PUT', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        msg.textContent = 'Đổi mật khẩu thành công'; msg.classList.add('ok');
+        document.getElementById('passwordForm').reset();
+        showToast('Đổi mật khẩu thành công');
+    });
+}
 
-            rows.innerHTML = enrollments.map(e => `
+async function loadProfileData() {
+    try {
+        const res = await authFetch(`${API_BASE}/api/users/profile`);
+        const p = await res.json();
+        document.getElementById('profileAvatar').textContent = (p.fullName || p.username || '?').charAt(0).toUpperCase();
+        document.getElementById('profileFullName').textContent = p.fullName || '—';
+        document.getElementById('profileRole').textContent = p.roleName || '—';
+        document.getElementById('profileUsername').textContent = p.username || '—';
+        document.getElementById('profileEmail').textContent = p.email || '—';
+        document.getElementById('profilePhone').textContent = p.phone || '—';
+        document.getElementById('pfFullName').value = p.fullName || '';
+        document.getElementById('pfPhone').value = p.phone || '';
+    } catch { showToast('Không thể tải hồ sơ', 'error'); }
+}
+
+// -- Student --
+async function loadStudentDashboard() {
+    const rows = document.getElementById('studentRows');
+    try {
+        const res = await authFetch(`${API_BASE}/api/student/courses?size=50`);
+        const data = await res.json();
+        const list = data.content || [];
+        if (list.length === 0) { rows.innerHTML = '<tr><td colspan="4">Chưa đăng ký khóa nào. <a href="index.html">Khám phá ngay</a></td></tr>'; return; }
+
+        rows.innerHTML = list.map(e => `
       <tr>
-        <td>${e.courseTitle}</td>
+        <td>${escapeHtml(e.courseTitle)}</td>
         <td>${statusBadge(e.status)}</td>
         <td>${e.enrolledDate ? new Date(e.enrolledDate).toLocaleDateString('vi-VN') : '-'}</td>
         <td class="row-actions">
+          ${e.status === 'ACTIVE' ? `<a class="btn small blue" href="course.html?id=${e.courseId}">Vào học</a>` : ''}
           ${e.status === 'PENDING' ? `<button class="btn small red" data-pay="${e.id}">Thanh toán</button>` : ''}
+          ${e.status === 'PENDING' || e.status === 'ACTIVE' ? `<button class="btn small" data-viewpay="${e.id}">Chi tiết TT</button>` : ''}
           ${e.status !== 'CANCELLED' ? `<button class="btn small" data-cancel="${e.id}">Hủy</button>` : ''}
         </td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
 
-            bindMyCourseActions();
+        rows.querySelectorAll('[data-pay]').forEach(b => b.addEventListener('click', async () => {
+            if (!confirm('Xác nhận thanh toán?')) return;
+            const res = await authFetch(`${API_BASE}/api/enrollments/${b.dataset.pay}/confirm-payment`, { method: 'POST' });
+            if (res.ok) { showToast('Thanh toán thành công!'); loadStudentDashboard(); }
+            else showToast(await res.text(), 'error');
+        }));
+        rows.querySelectorAll('[data-viewpay]').forEach(b => b.addEventListener('click', () => showPaymentDetail(b.dataset.viewpay)));
+        rows.querySelectorAll('[data-cancel]').forEach(b => b.addEventListener('click', async () => {
+            if (!confirm('Xác nhận hủy đăng ký?')) return;
+            await authFetch(`${API_BASE}/api/enrollments/${b.dataset.cancel}/cancel`, { method: 'PUT' });
+            showToast('Đã hủy đăng ký');
+            loadStudentDashboard();
+        }));
+    } catch { rows.innerHTML = '<tr><td colspan="4">Không thể tải dữ liệu</td></tr>'; }
+}
 
-        } catch (err) {
-            rows.innerHTML = '<tr><td colspan="4">Không thể tải dữ liệu</td></tr>';
+// -- Instructor --
+let instructorCoursesCache = [];
+
+function loadInstructorDashboard() {
+    document.querySelectorAll('[data-itab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-itab]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ['list', 'create', 'content'].forEach(t => {
+                document.getElementById(`itab-${t}`).style.display = t === btn.dataset.itab ? '' : 'none';
+            });
+            document.getElementById('instructorEnrollmentPanel').style.display = btn.dataset.itab === 'content' ? 'none' : '';
+            if (btn.dataset.itab === 'content') loadContentCourseSelect();
+        });
+    });
+
+    loadCategoriesIntoSelect('cCategory');
+    loadCategoriesIntoSelect('editCategory');
+    loadInstructorCourses();
+
+    document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('createCourseMessage');
+        const body = {
+            title: document.getElementById('cTitle').value.trim(),
+            description: document.getElementById('cDescription').value.trim(),
+            categoryId: parseInt(document.getElementById('cCategory').value, 10),
+            price: parseFloat(document.getElementById('cPrice').value) || 0
+        };
+        const res = await authFetch(`${API_BASE}/api/courses`, { method: 'POST', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        msg.textContent = 'Tạo khóa học thành công'; msg.classList.add('ok');
+        showToast('Tạo khóa học thành công');
+        document.getElementById('createCourseForm').reset();
+        loadInstructorCourses();
+    });
+
+    document.getElementById('contentCourseSelect').addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (id) loadChapterManager(id);
+        else {
+            document.getElementById('chapterManager').innerHTML = '<div class="empty-state">Chọn khóa học để quản lý nội dung</div>';
+            document.getElementById('addChapterForm').style.display = 'none';
         }
-    }
+    });
 
-    function bindMyCourseActions() {
-        document.querySelectorAll('[data-pay]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.pay;
-                if (!confirm('Xác nhận thanh toán khóa học này?')) return;
-                const res = await authFetch(`${API_BASE}/api/enrollments/${id}/confirm-payment`, { method: 'POST' });
-                const text = await res.text();
-                if (!res.ok) { alert(text); return; }
-                alert('Thanh toán thành công!');
-                initMyCoursesPage();
-            });
-        });
+    document.getElementById('addChapterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const courseId = document.getElementById('contentCourseSelect').value;
+        if (!courseId) return;
+        const body = {
+            title: document.getElementById('newChapterTitle').value.trim(),
+            chapterOrder: parseInt(document.getElementById('newChapterOrder').value, 10) || undefined
+        };
+        const res = await authFetch(`${API_BASE}/api/courses/${courseId}/chapters`, { method: 'POST', body: JSON.stringify(body) });
+        if (!res.ok) { showToast(await res.text(), 'error'); return; }
+        showToast('Thêm chương thành công');
+        document.getElementById('newChapterTitle').value = '';
+        document.getElementById('newChapterOrder').value = '';
+        loadChapterManager(courseId);
+    });
 
-        document.querySelectorAll('[data-cancel]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.dataset.cancel;
-                if (!confirm('Xác nhận hủy đăng ký khóa học này?')) return;
-                const res = await authFetch(`${API_BASE}/api/enrollments/${id}/cancel`, { method: 'PUT' });
-                const text = await res.text();
-                if (!res.ok) { alert(text); return; }
-                initMyCoursesPage();
-            });
-        });
-    }
-// ---------- 8. Trang teacher.html ----------
-    function initTeacherPage() {
-        const rows = document.getElementById('teacherCourseRows');
-        if (!rows) return;
-        if (!requireLogin()) return;
+    document.getElementById('editCourseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('editCourseMessage');
+        const id = document.getElementById('editCourseId').value;
+        const body = {
+            title: document.getElementById('editTitle').value.trim(),
+            description: document.getElementById('editDescription').value.trim(),
+            categoryId: parseInt(document.getElementById('editCategory').value, 10),
+            price: parseFloat(document.getElementById('editPrice').value) || 0,
+            status: document.getElementById('editStatus').value
+        };
+        const res = await authFetch(`${API_BASE}/api/courses/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        showToast('Cập nhật khóa học thành công');
+        closeModal('editCourseModal');
+        loadInstructorCourses();
+    });
+}
 
-        loadCategoriesForCreateForm();
-        loadTeacherCourses();
+async function loadCategoriesIntoSelect(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    if (select.options.length > 1) return;
+    const res = await fetch(`${API_BASE}/api/categories?size=100`);
+    const data = await res.json();
+    (data.content || []).forEach(c => {
+        const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name;
+        select.appendChild(opt);
+    });
+}
 
-        document.querySelectorAll('.tabs [data-tab]').forEach(tabBtn => {
-            tabBtn.addEventListener('click', () => {
-                document.querySelectorAll('.tabs [data-tab]').forEach(b => b.classList.remove('active'));
-                tabBtn.classList.add('active');
-                document.getElementById('tab-list').style.display = tabBtn.dataset.tab === 'list' ? '' : 'none';
-                document.getElementById('tab-create').style.display = tabBtn.dataset.tab === 'create' ? '' : 'none';
-            });
-        });
-
-        document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const msg = document.getElementById('createCourseMessage');
-            msg.textContent = ''; msg.classList.remove('ok');
-
-            const body = {
-                title: document.getElementById('cTitle').value.trim(),
-                description: document.getElementById('cDescription').value.trim(),
-                categoryId: parseInt(document.getElementById('cCategory').value, 10),
-                price: parseFloat(document.getElementById('cPrice').value) || 0,
-                thumbnailUrl: document.getElementById('cThumbnail').value.trim()
-            };
-
-            const res = await authFetch(`${API_BASE}/api/courses`, { method: 'POST', body: JSON.stringify(body) });
-            const text = await res.text();
-            if (!res.ok) { msg.textContent = text; return; }
-
-            msg.textContent = 'Tạo khóa học thành công! (Trạng thái DRAFT, chờ Admin duyệt)';
-            msg.classList.add('ok');
-            document.getElementById('createCourseForm').reset();
-            loadTeacherCourses();
-        });
-    }
-
-    async function loadCategoriesForCreateForm() {
-        const select = document.getElementById('cCategory');
-        if (!select) return;
-        const res = await fetch(`${API_BASE}/api/categories?size=100`);
+async function loadInstructorCourses() {
+    const rows = document.getElementById('instructorCourseRows');
+    try {
+        const res = await authFetch(`${API_BASE}/api/instructor/courses?size=50`);
         const data = await res.json();
-        (data.content || []).forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id; opt.textContent = c.name;
-            select.appendChild(opt);
-        });
-    }
+        instructorCoursesCache = data.content || [];
+        if (instructorCoursesCache.length === 0) { rows.innerHTML = '<tr><td colspan="5">Chưa tạo khóa học nào</td></tr>'; return; }
 
-    async function loadTeacherCourses() {
-        const rows = document.getElementById('teacherCourseRows');
-        try {
-            const res = await authFetch(`${API_BASE}/api/instructor/courses?size=50`);
-            const data = await res.json();
-            const courses = data.content || [];
-            document.getElementById('teacherCourseCount').textContent = data.totalElements || courses.length;
-
-            if (courses.length === 0) {
-                rows.innerHTML = '<tr><td colspan="5">Bạn chưa tạo khóa học nào</td></tr>';
-                return;
-            }
-
-            rows.innerHTML = courses.map(c => `
+        rows.innerHTML = instructorCoursesCache.map(c => `
       <tr>
-        <td>${c.title}</td>
-        <td>${c.categoryName || '-'}</td>
-        <td>${statusBadge(c.status)}</td>
-        <td><button class="btn small" data-view-enroll="${c.id}">Xem</button></td>
-        <td class="row-actions"><button class="btn small red" data-delete-course="${c.id}">Xóa</button></td>
-      </tr>
-    `).join('');
+        <td>${escapeHtml(c.title)}</td><td>${escapeHtml(c.categoryName || '-')}</td><td>${statusBadge(c.status)}</td>
+        <td><button class="btn small" data-view="${c.id}" data-name="${escapeHtml(c.title)}">Xem HV</button></td>
+        <td class="row-actions">
+          <button class="btn small blue" data-edit="${c.id}">Sửa</button>
+          <button class="btn small" data-content="${c.id}">Nội dung</button>
+          <button class="btn small red" data-del="${c.id}">Xóa</button>
+        </td>
+      </tr>`).join('');
 
-            document.querySelectorAll('[data-view-enroll]').forEach(btn => {
-                btn.addEventListener('click', () => loadEnrollmentsOfCourse(btn.dataset.viewEnroll));
-            });
-            document.querySelectorAll('[data-delete-course]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    if (!confirm('Xóa khóa học này?')) return;
-                    const res = await authFetch(`${API_BASE}/api/courses/${btn.dataset.deleteCourse}`, { method: 'DELETE' });
-                    const text = await res.text();
-                    if (!res.ok) { alert(text); return; }
-                    loadTeacherCourses();
-                });
-            });
+        rows.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => loadCourseEnrollments(b.dataset.view, b.dataset.name)));
+        rows.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEditCourseModal(b.dataset.edit)));
+        rows.querySelectorAll('[data-content]').forEach(b => b.addEventListener('click', () => {
+            document.querySelector('[data-itab="content"]').click();
+            document.getElementById('contentCourseSelect').value = b.dataset.content;
+            loadChapterManager(b.dataset.content);
+        }));
+        rows.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+            if (!confirm('Xóa khóa học này?')) return;
+            await authFetch(`${API_BASE}/api/courses/${b.dataset.del}`, { method: 'DELETE' });
+            showToast('Đã xóa khóa học');
+            loadInstructorCourses();
+        }));
+    } catch { rows.innerHTML = '<tr><td colspan="5">Không thể tải dữ liệu</td></tr>'; }
+}
 
-        } catch (err) {
-            rows.innerHTML = '<tr><td colspan="5">Không thể tải dữ liệu</td></tr>';
+async function openEditCourseModal(courseId) {
+    const course = instructorCoursesCache.find(c => String(c.id) === String(courseId));
+    if (!course) return;
+    document.getElementById('editCourseId').value = course.id;
+    document.getElementById('editTitle').value = course.title || '';
+    document.getElementById('editDescription').value = course.description || '';
+    document.getElementById('editCategory').value = course.categoryId || '';
+    document.getElementById('editPrice').value = course.price || 0;
+    document.getElementById('editStatus').value = course.status || 'DRAFT';
+    document.getElementById('editCourseMessage').textContent = '';
+    openModal('editCourseModal');
+}
+
+async function loadContentCourseSelect() {
+    const select = document.getElementById('contentCourseSelect');
+    select.innerHTML = '<option value="">Chọn khóa học...</option>';
+    if (instructorCoursesCache.length === 0) {
+        const res = await authFetch(`${API_BASE}/api/instructor/courses?size=50`);
+        const data = await res.json();
+        instructorCoursesCache = data.content || [];
+    }
+    instructorCoursesCache.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id; opt.textContent = c.title;
+        select.appendChild(opt);
+    });
+}
+
+async function loadChapterManager(courseId) {
+    const container = document.getElementById('chapterManager');
+    document.getElementById('addChapterForm').style.display = '';
+    container.innerHTML = '<div class="empty-state">Đang tải...</div>';
+    try {
+        const res = await authFetch(`${API_BASE}/api/courses/${courseId}/chapters`);
+        const chapters = await res.json();
+        if (!chapters.length) {
+            container.innerHTML = '<div class="empty-state">Chưa có chương nào — thêm chương bên dưới</div>';
+            return;
         }
-    }
+        const withLessons = await Promise.all(chapters.map(async ch => {
+            const lr = await authFetch(`${API_BASE}/api/chapters/${ch.id}/lessons`);
+            ch.lessons = lr.ok ? await lr.json() : [];
+            return ch;
+        }));
+        container.innerHTML = withLessons.map(ch => renderChapterEditor(ch, courseId)).join('');
+        bindChapterEditorEvents(courseId);
+    } catch { container.innerHTML = '<div class="empty-state">Không thể tải dữ liệu</div>'; }
+}
 
-    async function loadEnrollmentsOfCourse(courseId) {
-        const rows = document.getElementById('enrollmentRows');
-        rows.innerHTML = '<tr><td colspan="4">Đang tải...</td></tr>';
+function renderChapterEditor(ch, courseId) {
+    const lessons = ch.lessons || [];
+    return `
+    <div class="chapter-editor" data-chapter-id="${ch.id}">
+      <div class="chapter-editor-head">
+        <strong>${escapeHtml(ch.title)}</strong>
+        <span class="row-actions">
+          <button class="btn small" data-edit-ch="${ch.id}" data-title="${escapeHtml(ch.title)}" data-order="${ch.chapterOrder || ''}">Sửa</button>
+          <button class="btn small red" data-del-ch="${ch.id}">Xóa</button>
+        </span>
+      </div>
+      <div class="lesson-list">
+        ${lessons.map(l => `
+          <div class="lesson-editor-row">
+            <span>${escapeHtml(l.title)}</span>
+            <span class="row-actions">
+              <button class="btn small" data-edit-lesson="${l.id}" data-chapter="${ch.id}"
+                data-title="${escapeHtml(l.title)}" data-content="${escapeHtml(l.content || '')}"
+                data-video="${escapeHtml(l.videoUrl || '')}" data-order="${l.lessonOrder || ''}">Sửa</button>
+              <button class="btn small red" data-del-lesson="${l.id}">Xóa</button>
+            </span>
+          </div>`).join('') || '<div class="empty-hint">Chưa có bài học</div>'}
+      </div>
+      <form class="inline-form lesson-add-form" data-chapter="${ch.id}">
+        <input class="field" name="title" placeholder="Tên bài học" required>
+        <input class="field" name="videoUrl" placeholder="Link video (tuỳ chọn)">
+        <textarea class="field textarea" name="content" placeholder="Nội dung bài học" rows="2"></textarea>
+        <button class="btn small blue" type="submit">+ Bài học</button>
+      </form>
+    </div>`;
+}
 
-        try {
-            const res = await authFetch(`${API_BASE}/api/courses/${courseId}/enrollments`);
-            const enrollments = await res.json();
+function bindChapterEditorEvents(courseId) {
+    const container = document.getElementById('chapterManager');
 
-            if (enrollments.length === 0) {
-                rows.innerHTML = '<tr><td colspan="4">Chưa có học viên đăng ký</td></tr>';
-                return;
-            }
+    container.querySelectorAll('[data-del-ch]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Xóa chương này và tất cả bài học bên trong?')) return;
+            await authFetch(`${API_BASE}/api/chapters/${btn.dataset.delCh}`, { method: 'DELETE' });
+            showToast('Đã xóa chương');
+            loadChapterManager(courseId);
+        });
+    });
 
-            rows.innerHTML = enrollments.map(e => `
+    container.querySelectorAll('[data-edit-ch]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const title = prompt('Tên chương:', btn.dataset.title);
+            if (!title) return;
+            const order = prompt('Thứ tự (số):', btn.dataset.order || '1');
+            await authFetch(`${API_BASE}/api/chapters/${btn.dataset.editCh}`, {
+                method: 'PUT', body: JSON.stringify({ title: title.trim(), chapterOrder: parseInt(order, 10) || 1 })
+            });
+            showToast('Đã cập nhật chương');
+            loadChapterManager(courseId);
+        });
+    });
+
+    container.querySelectorAll('[data-del-lesson]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!confirm('Xóa bài học này?')) return;
+            await authFetch(`${API_BASE}/api/lessons/${btn.dataset.delLesson}`, { method: 'DELETE' });
+            showToast('Đã xóa bài học');
+            loadChapterManager(courseId);
+        });
+    });
+
+    container.querySelectorAll('[data-edit-lesson]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const title = prompt('Tên bài học:', btn.dataset.title);
+            if (!title) return;
+            const content = prompt('Nội dung:', btn.dataset.content);
+            const videoUrl = prompt('Link video:', btn.dataset.video);
+            await authFetch(`${API_BASE}/api/lessons/${btn.dataset.editLesson}`, {
+                method: 'PUT', body: JSON.stringify({
+                    title: title.trim(), content: content || '', videoUrl: videoUrl || '',
+                    lessonOrder: parseInt(btn.dataset.order, 10) || 1
+                })
+            });
+            showToast('Đã cập nhật bài học');
+            loadChapterManager(courseId);
+        });
+    });
+
+    container.querySelectorAll('.lesson-add-form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const chapterId = form.dataset.chapter;
+            const fd = new FormData(form);
+            const body = {
+                title: fd.get('title').trim(),
+                content: fd.get('content').trim(),
+                videoUrl: fd.get('videoUrl').trim()
+            };
+            const res = await authFetch(`${API_BASE}/api/chapters/${chapterId}/lessons`, { method: 'POST', body: JSON.stringify(body) });
+            if (!res.ok) { showToast(await res.text(), 'error'); return; }
+            showToast('Thêm bài học thành công');
+            form.reset();
+            loadChapterManager(courseId);
+        });
+    });
+}
+
+async function loadCourseEnrollments(courseId, courseName) {
+    document.getElementById('selectedCourseName').textContent = courseName || '';
+    const rows = document.getElementById('enrollmentRows');
+    rows.innerHTML = '<tr><td colspan="3">Đang tải...</td></tr>';
+    try {
+        const res = await authFetch(`${API_BASE}/api/courses/${courseId}/enrollments`);
+        const list = await res.json();
+        if (list.length === 0) { rows.innerHTML = '<tr><td colspan="3">Chưa có học viên</td></tr>'; return; }
+
+        rows.innerHTML = list.map(e => `
       <tr>
-        <td>${e.userFullName}</td>
-        <td>${e.courseTitle}</td>
-        <td>${statusBadge(e.status)}</td>
+        <td>${escapeHtml(e.userFullName)}</td><td>${statusBadge(e.status)}</td>
         <td class="row-actions">
           ${e.status === 'PENDING' ? `<button class="btn small blue" data-approve="${e.id}">Duyệt</button>` : ''}
-          <button class="btn small red" data-teacher-cancel="${e.id}">Hủy</button>
+          <button class="btn small red" data-icancel="${e.id}">Hủy</button>
         </td>
-      </tr>
-    `).join('');
+      </tr>`).join('');
 
-            document.querySelectorAll('[data-approve]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await authFetch(`${API_BASE}/api/enrollments/${btn.dataset.approve}/approve`, { method: 'PUT' });
-                    loadEnrollmentsOfCourse(courseId);
-                });
-            });
-            document.querySelectorAll('[data-teacher-cancel]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await authFetch(`${API_BASE}/api/enrollments/${btn.dataset.teacherCancel}/cancel`, { method: 'PUT' });
-                    loadEnrollmentsOfCourse(courseId);
-                });
-            });
+        rows.querySelectorAll('[data-approve]').forEach(b => b.addEventListener('click', async () => {
+            await authFetch(`${API_BASE}/api/enrollments/${b.dataset.approve}/approve`, { method: 'PUT' });
+            showToast('Đã duyệt ghi danh');
+            loadCourseEnrollments(courseId, courseName);
+        }));
+        rows.querySelectorAll('[data-icancel]').forEach(b => b.addEventListener('click', async () => {
+            await authFetch(`${API_BASE}/api/enrollments/${b.dataset.icancel}/cancel`, { method: 'PUT' });
+            showToast('Đã hủy ghi danh');
+            loadCourseEnrollments(courseId, courseName);
+        }));
+    } catch { rows.innerHTML = '<tr><td colspan="3">Không thể tải dữ liệu</td></tr>'; }
+}
 
-        } catch (err) {
-            rows.innerHTML = '<tr><td colspan="4">Không thể tải dữ liệu</td></tr>';
-        }
-    }
-// ---------- 9. Trang admin.html ----------
-    function initAdminPage() {
-        const userRows = document.getElementById('userRows');
-        if (!userRows) return;
-        if (!requireLogin()) return;
-
-        document.querySelectorAll('.tabs [data-admintab]').forEach(tabBtn => {
-            tabBtn.addEventListener('click', () => {
-                document.querySelectorAll('.tabs [data-admintab]').forEach(b => b.classList.remove('active'));
-                tabBtn.classList.add('active');
-                ['users', 'categories', 'stats'].forEach(t => {
-                    document.getElementById(`admintab-${t}`).style.display = (t === tabBtn.dataset.admintab) ? '' : 'none';
-                });
-                if (tabBtn.dataset.admintab === 'categories') loadAdminCategories();
-                if (tabBtn.dataset.admintab === 'stats') loadAdminStats();
-            });
+// -- Admin --
+function loadAdminDashboard() {
+    document.querySelectorAll('[data-atab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-atab]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            ['courses', 'users', 'categories', 'stats'].forEach(t =>
+                document.getElementById(`atab-${t}`).style.display = t === btn.dataset.atab ? '' : 'none');
+            if (btn.dataset.atab === 'users') loadAdminUsers();
+            if (btn.dataset.atab === 'categories') loadAdminCategories();
+            if (btn.dataset.atab === 'stats') loadAdminStats();
         });
-
-        loadAdminUsers();
-
-        document.getElementById('createCategoryForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const msg = document.getElementById('categoryMessage');
-            msg.textContent = ''; msg.classList.remove('ok');
-
-            const body = {
-                name: document.getElementById('catName').value.trim(),
-                description: document.getElementById('catDescription').value.trim()
-            };
-
-            const res = await authFetch(`${API_BASE}/api/admin/categories`, { method: 'POST', body: JSON.stringify(body) });
-            const text = await res.text();
-            if (!res.ok) { msg.textContent = text; return; }
-
-            msg.textContent = 'Thêm danh mục thành công';
-            msg.classList.add('ok');
-            document.getElementById('createCategoryForm').reset();
-            loadAdminCategories();
-        });
-    }
-
-    async function loadAdminUsers() {
-        const rows = document.getElementById('userRows');
-        try {
-            const res = await authFetch(`${API_BASE}/api/admin/users?size=50`);
-            const data = await res.json();
-            const users = data.content || [];
-
-            rows.innerHTML = users.map(u => `
-      <tr>
-        <td>${u.username}</td>
-        <td>${u.fullName || '-'}</td>
-        <td>${u.roleName}</td>
-        <td>${u.email}</td>
-        <td>${u.enabled ? statusBadge('ACTIVE') : statusBadge('CANCELLED')}</td>
-        <td><button class="btn small ${u.enabled ? 'red' : 'blue'}" data-toggle="${u.id}">${u.enabled ? 'Khóa' : 'Mở khóa'}</button></td>
-      </tr>
-    `).join('');
-
-            document.querySelectorAll('[data-toggle]').forEach(btn => {
-                btn.addEventListener('click', async () => {
-                    await authFetch(`${API_BASE}/api/admin/users/${btn.dataset.toggle}/toggle`, { method: 'PUT' });
-                    loadAdminUsers();
-                });
-            });
-
-        } catch (err) {
-            rows.innerHTML = '<tr><td colspan="6">Không thể tải dữ liệu</td></tr>';
-        }
-    }
-
-    async function loadAdminCategories() {
-        const rows = document.getElementById('categoryRows');
-        const res = await fetch(`${API_BASE}/api/categories?size=100`);
-        const data = await res.json();
-        const categories = data.content || [];
-
-        rows.innerHTML = categories.map(c => `
-    <tr>
-      <td>${c.name}</td>
-      <td>${c.description || '-'}</td>
-      <td><button class="btn small red" data-delcat="${c.id}">Xóa</button></td>
-    </tr>
-  `).join('');
-
-        document.querySelectorAll('[data-delcat]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                if (!confirm('Xóa danh mục này?')) return;
-                await authFetch(`${API_BASE}/api/admin/categories/${btn.dataset.delcat}`, { method: 'DELETE' });
-                loadAdminCategories();
-            });
-        });
-    }
-
-    async function loadAdminStats() {
-        const grid = document.getElementById('statsGrid');
-        const rows = document.getElementById('statsRows');
-
-        try {
-            const res = await authFetch(`${API_BASE}/api/enrollments/statistics`);
-            const stats = await res.json();
-
-            const totalStudents = stats.reduce((sum, s) => sum + s.totalEnrolled, 0);
-            const totalActive = stats.reduce((sum, s) => sum + s.activeCount, 0);
-
-            grid.innerHTML = `
-      <div class="metric-card"><strong>${stats.length}</strong><span>khóa học</span></div>
-      <div class="metric-card"><strong>${totalStudents}</strong><span>lượt ghi danh</span></div>
-      <div class="metric-card"><strong>${totalActive}</strong><span>đang học</span></div>
-    `;
-
-            rows.innerHTML = stats.map(s => `
-      <tr>
-        <td>${s.courseTitle}</td>
-        <td>${s.totalEnrolled}</td>
-        <td>${s.activeCount}</td>
-        <td>${s.completedCount}</td>
-        <td>${s.cancelledCount}</td>
-      </tr>
-    `).join('');
-
-        } catch (err) {
-            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Không thể tải thống kê</div>';
-        }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-        initAuthUI();
-        initLoginPage();
-        initRegisterPage();
-        loadFeaturedCourses();
-        initCoursesPage();
-        initCourseDetailPage();
-        initMyCoursesPage();
-        initTeacherPage();
-        initAdminPage();
     });
+
+    loadAdminPendingCourses();
+
+    document.getElementById('createCategoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('categoryMessage');
+        const body = { name: document.getElementById('catName').value.trim(), description: document.getElementById('catDescription').value.trim() };
+        const res = await authFetch(`${API_BASE}/api/admin/categories`, { method: 'POST', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        msg.textContent = 'Thêm thành công'; msg.classList.add('ok');
+        showToast('Thêm danh mục thành công');
+        document.getElementById('createCategoryForm').reset();
+        loadAdminCategories();
+    });
+
+    document.getElementById('editCategoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('editCategoryMessage');
+        const id = document.getElementById('editCatId').value;
+        const body = {
+            name: document.getElementById('editCatName').value.trim(),
+            description: document.getElementById('editCatDescription').value.trim()
+        };
+        const res = await authFetch(`${API_BASE}/api/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+        const text = await res.text();
+        if (!res.ok) { msg.textContent = text; msg.classList.remove('ok'); return; }
+        showToast('Cập nhật danh mục thành công');
+        closeModal('editCategoryModal');
+        loadAdminCategories();
+    });
+}
+
+async function loadAdminPendingCourses() {
+    const rows = document.getElementById('adminCourseRows');
+    try {
+        const res = await authFetch(`${API_BASE}/api/admin/courses?size=100`);
+        const data = await res.json();
+        const courses = data.content || [];
+        if (courses.length === 0) { rows.innerHTML = '<tr><td colspan="4">Không có khóa học</td></tr>'; return; }
+
+        rows.innerHTML = courses.map(c => `
+      <tr>
+        <td>${escapeHtml(c.title)}</td><td>${escapeHtml(c.instructorName || '-')}</td><td>${statusBadge(c.status)}</td>
+        <td class="row-actions">
+          ${c.status !== 'PUBLISHED' ? `<button class="btn small blue" data-approve-course="${c.id}" data-title="${escapeHtml(c.title)}">Duyệt</button>` : ''}
+          ${c.status !== 'ARCHIVED' ? `<button class="btn small red" data-archive-course="${c.id}" data-title="${escapeHtml(c.title)}">Gỡ</button>` : ''}
+        </td>
+      </tr>`).join('');
+
+        rows.querySelectorAll('[data-approve-course]').forEach(b => b.addEventListener('click', async () => {
+            await authFetch(`${API_BASE}/api/courses/${b.dataset.approveCourse}`, {
+                method: 'PUT', body: JSON.stringify({ title: b.dataset.title, status: 'PUBLISHED' })
+            });
+            showToast('Đã duyệt khóa học');
+            loadAdminPendingCourses();
+        }));
+        rows.querySelectorAll('[data-archive-course]').forEach(b => b.addEventListener('click', async () => {
+            await authFetch(`${API_BASE}/api/courses/${b.dataset.archiveCourse}`, {
+                method: 'PUT', body: JSON.stringify({ title: b.dataset.title, status: 'ARCHIVED' })
+            });
+            showToast('Đã gỡ khóa học');
+            loadAdminPendingCourses();
+        }));
+    } catch { rows.innerHTML = '<tr><td colspan="4">Không thể tải dữ liệu</td></tr>'; }
+}
+
+async function loadAdminUsers() {
+    const rows = document.getElementById('userRows');
+    const res = await authFetch(`${API_BASE}/api/admin/users?size=50`);
+    const data = await res.json();
+    const users = data.content || [];
+    rows.innerHTML = users.map(u => `
+    <tr>
+      <td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.fullName || '-')}</td><td>${u.roleName}</td>
+      <td>${u.enabled ? statusBadge('ACTIVE') : statusBadge('CANCELLED')}</td>
+      <td><button class="btn small ${u.enabled ? 'red' : 'blue'}" data-toggle="${u.id}">${u.enabled ? 'Khóa' : 'Mở'}</button></td>
+    </tr>`).join('');
+    rows.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', async () => {
+        await authFetch(`${API_BASE}/api/admin/users/${b.dataset.toggle}/toggle`, { method: 'PUT' });
+        showToast('Đã cập nhật trạng thái tài khoản');
+        loadAdminUsers();
+    }));
+}
+
+let adminCategoriesCache = [];
+
+async function loadAdminCategories() {
+    const rows = document.getElementById('categoryRows');
+    const res = await fetch(`${API_BASE}/api/categories?size=100`);
+    const data = await res.json();
+    adminCategoriesCache = data.content || [];
+    rows.innerHTML = adminCategoriesCache.map(c => `
+    <tr><td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.description || '-')}</td>
+    <td class="row-actions">
+      <button class="btn small blue" data-editcat="${c.id}">Sửa</button>
+      <button class="btn small red" data-delcat="${c.id}">Xóa</button>
+    </td></tr>`).join('');
+    rows.querySelectorAll('[data-editcat]').forEach(b => b.addEventListener('click', () => {
+        const cat = adminCategoriesCache.find(x => String(x.id) === b.dataset.editcat);
+        if (!cat) return;
+        document.getElementById('editCatId').value = cat.id;
+        document.getElementById('editCatName').value = cat.name;
+        document.getElementById('editCatDescription').value = cat.description || '';
+        document.getElementById('editCategoryMessage').textContent = '';
+        openModal('editCategoryModal');
+    }));
+    rows.querySelectorAll('[data-delcat]').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Xóa danh mục này?')) return;
+        await authFetch(`${API_BASE}/api/admin/categories/${b.dataset.delcat}`, { method: 'DELETE' });
+        showToast('Đã xóa danh mục');
+        loadAdminCategories();
+    }));
+}
+
+async function loadAdminStats() {
+    const grid = document.getElementById('statsGrid');
+    const rows = document.getElementById('statsRows');
+    const res = await authFetch(`${API_BASE}/api/enrollments/statistics`);
+    const stats = await res.json();
+    const total = stats.reduce((s, x) => s + x.totalEnrolled, 0);
+    const active = stats.reduce((s, x) => s + x.activeCount, 0);
+    grid.innerHTML = `
+    <div class="metric-card"><strong>${stats.length}</strong><span>khóa học</span></div>
+    <div class="metric-card"><strong>${total}</strong><span>lượt ghi danh</span></div>
+    <div class="metric-card"><strong>${active}</strong><span>đang học</span></div>`;
+    rows.innerHTML = stats.map(s => `
+    <tr><td>${escapeHtml(s.courseTitle)}</td><td>${s.totalEnrolled}</td><td>${s.activeCount}</td><td>${s.completedCount}</td><td>${s.cancelledCount}</td></tr>`).join('');
+}
+
+// ---------- Khởi chạy ----------
+document.addEventListener('DOMContentLoaded', () => {
+    initAuthUI();
+    initAuthPage();
+    initIndexPage();
+    initCoursePage();
+    initDashboardPage();
 });

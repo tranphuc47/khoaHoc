@@ -21,6 +21,12 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getAllPublished(pageable));
     }
 
+    // Admin — xem toàn bộ khóa học (kể cả DRAFT) để duyệt
+    @GetMapping("/api/admin/courses")
+    public ResponseEntity<?> getAllForAdmin(Pageable pageable) {
+        return ResponseEntity.ok(courseService.getAllForAdmin(pageable));
+    }
+
     // STT 2 — public, trả về kèm chapters + lessons
     @GetMapping("/api/courses/{id}")
     public ResponseEntity<?> getById(@PathVariable Integer id) {
