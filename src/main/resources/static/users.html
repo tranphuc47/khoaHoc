@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý người dùng</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng lưu trữ thông tin khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Giới thiệu</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học sinh</a>
+        <a href="teacher.html" data-nav>Giáo viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><button class="btn red" data-logout>Đăng xuất</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Quản lý › Người dùng</div>
+    <section class="hero-strip">
+      <div><div class="eyebrow">Phân quyền</div><h1>Quản lý tài khoản và vai trò</h1></div>
+      <div class="stats"><div class="stat"><div><strong>3</strong><span>vai trò</span></div></div><div class="stat"><div><strong id="userCount">0</strong><span>tài khoản</span></div></div></div>
+    </section>
+
+    <div class="local-note">Backend hiện chưa có API quản lý người dùng (không có UserController), nên trang này thao tác trên dữ liệu lưu cục bộ ở trình duyệt (localStorage) để bạn hình dung đầy đủ luồng UI. Khi backend bổ sung API, chỉ cần thay các lời gọi localStorage bằng fetch tới endpoint tương ứng.</div>
+
+    <section class="my-courses">
+      <div class="my-courses-title"><h2>Quản lý hệ thống</h2><span class="count">Admin, giáo viên, học sinh</span></div>
+      <div class="tabs">
+        <a href="management.html">Khóa học</a>
+        <a href="categories.html">Danh mục</a>
+        <a class="active" href="users.html">Người dùng</a>
+        <a href="statistics.html">Thống kê</a>
+      </div>
+      <form id="userForm" class="form-grid">
+        <input class="field" name="username" placeholder="Tên đăng nhập" required>
+        <input class="field" name="fullName" placeholder="Họ và tên" required>
+        <select class="field" name="role">
+          <option value="STUDENT">Học sinh</option>
+          <option value="INSTRUCTOR">Giáo viên</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+        <input class="field" name="email" type="email" placeholder="Email">
+        <input class="field" name="phone" placeholder="Số điện thoại">
+        <select class="field" name="status">
+          <option value="ACTIVE">Đang hoạt động</option>
+          <option value="LOCKED">Tạm khóa</option>
+        </select>
+        <button class="btn red" type="submit" data-user-submit>Tạo tài khoản</button>
+      </form>
+    </section>
+
+    <section class="panel" style="margin-top:20px">
+      <div class="section-head">
+        <h2>Danh sách người dùng</h2>
+        <input class="field" id="userSearch" placeholder="Tìm theo tên đăng nhập hoặc họ tên" style="max-width:320px">
+      </div>
+      <table class="table">
+        <thead><tr><th>Tài khoản</th><th>Họ tên</th><th>Vai trò</th><th>Email</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody id="userRows"><tr><td colspan="6">Đang tải dữ liệu...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
