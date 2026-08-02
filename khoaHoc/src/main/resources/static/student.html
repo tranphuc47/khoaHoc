@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Học viên</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <span class="btn" data-username>Tài khoản</span>
+        <button class="btn red" data-logout>Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Học viên</div>
+    <section class="hero-strip">
+      <div>
+        <h1>Khóa học đã ghi danh và tiến độ học tập</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong id="studentTotal">0</strong><span>đã đăng ký</span></div></div>
+        <div class="stat"><div><strong id="studentProgress">0%</strong><span>tiến độ</span></div></div>
+      </div>
+    </section>
+
+    <section class="role-grid">
+      <aside class="profile-card">
+        <div class="profile-avatar">HV</div>
+        <div class="profile-list">
+          <div><strong>Tài khoản:</strong> <span data-username>Chưa đăng nhập</span></div>
+          <div><strong>Số môn đang/đã học:</strong> <span id="studentSubjects">0</span></div>
+          <div><strong>Đang học:</strong> <span id="studentActive">0</span></div>
+          <div><strong>Chờ duyệt:</strong> <span id="studentPending">0</span></div>
+          <div><strong>Hoàn thành:</strong> <span id="studentCompleted">0</span></div>
+          <div><strong>Đã hủy:</strong> <span id="studentCancelled">0</span></div>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>Tiến độ học tập</h2>
+        </div>
+        <div class="progress large"><span id="studentProgressBar" style="width:0%"></span></div>
+        <div class="metric-grid">
+          <div class="metric-card"><strong data-student-active>0</strong>Đang học</div>
+          <div class="metric-card"><strong data-student-pending>0</strong>Chờ duyệt</div>
+          <div class="metric-card"><strong data-student-completed>0</strong>Hoàn thành</div>
+          <div class="metric-card"><strong data-student-cancelled>0</strong>Đã hủy</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title">
+        <h2>Khóa học của tôi</h2>
+        <a class="btn" href="courses.html">Tìm khóa học</a>
+      </div>
+      <table class="table">
+        <thead><tr><th>Khóa học</th><th>Trạng thái</th><th>Tiến độ</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
+        <tbody id="studentCourseRows"><tr><td colspan="5">Đang tải dữ liệu...</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

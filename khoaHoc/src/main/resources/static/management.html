@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <span class="btn" data-username>Tài khoản</span>
+        <button class="btn red" data-logout>Đăng xuất</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page" id="managementPanel">
+    <div class="breadcrumb">Trang chủ › Quản lý</div>
+    <section class="hero-strip">
+      <div>
+        <h1>Bảng điều khiển quản lý khóa học</h1>
+      </div>
+      <div class="stats">
+        <div class="stat"><div><strong id="teacherCourseCount">0</strong><span>khóa phụ trách</span></div></div>
+        <div class="stat"><div><strong id="statEnrollTotal">0</strong><span>ghi danh</span></div></div>
+      </div>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title">
+        <h2>Quản lý hệ thống</h2>
+        <span class="count">Yêu cầu tài khoản ADMIN hoặc INSTRUCTOR</span>
+      </div>
+      <div class="tabs">
+        <a class="active" href="management.html">Khóa học</a>
+        <a href="categories.html">Danh mục</a>
+        <a href="teacher.html">Giảng viên</a>
+        <a href="statistics.html">Thống kê</a>
+      </div>
+      <div id="managementMessage" class="message"></div>
+    </section>
+
+    <section class="module-workflow">
+      <article>
+        <h3>Danh mục</h3>
+        <p>Tạo nhóm chủ đề, dùng để phân loại khóa học và lọc nội dung trên trang học viên.</p>
+        <a class="btn" href="categories.html">Quản lý danh mục</a>
+      </article>
+      <article>
+        <h3>Khóa học</h3>
+        <p>Tạo khóa học bản nháp, gắn danh mục, học phí, mô tả và theo dõi khóa phụ trách.</p>
+        <a class="btn" href="#courseForm">Tạo khóa học</a>
+      </article>
+      <article>
+        <h3>Chương & bài học</h3>
+        <p>Thêm chương, chọn chương theo khóa và đưa bài học vào đúng thứ tự học tập.</p>
+        <a class="btn" href="#chapterForm">Soạn nội dung</a>
+      </article>
+      <article>
+        <h3>Ghi danh</h3>
+        <p>Theo dõi số học viên đang học, hoàn thành, đã hủy và tỷ lệ hoàn thành từng khóa.</p>
+        <a class="btn blue" href="statistics.html">Xem thống kê</a>
+      </article>
+    </section>
+
+    <section class="form-sections">
+      <article class="panel">
+        <div class="form-toolbar">
+          <h2>Tạo / sửa khóa học</h2>
+          <span class="edit-flag" id="courseEditFlag">Đang sửa <button type="button" class="btn small ghost" data-cancel-course-edit>Hủy</button></span>
+        </div>
+        <form id="courseForm" class="form-stack">
+          <input class="field" name="title" placeholder="Tên khóa học" required>
+          <textarea class="field textarea" name="description" placeholder="Mô tả khóa học"></textarea>
+          <input class="field" name="thumbnailUrl" placeholder="Ảnh đại diện URL">
+          <input class="field" name="price" type="number" min="0" step="1000" placeholder="Học phí" required>
+          <select class="field" id="courseCategoryId" name="categoryId" required></select>
+          <button class="btn blue" type="submit">Tạo khóa học bản nháp</button>
+        </form>
+      </article>
+
+      <article class="panel">
+        <div class="section-head"><h2>Thêm chương</h2></div>
+        <form id="chapterForm" class="form-stack">
+          <select class="field" id="chapterCourseId" name="courseId" required></select>
+          <input class="field" name="title" placeholder="Tên chương" required>
+          <input class="field" name="chapterOrder" type="number" min="0" placeholder="Thứ tự">
+          <button class="btn blue" type="submit">Thêm chương</button>
+        </form>
+        <table class="table" style="margin-top:16px">
+          <thead><tr><th>ID</th><th>Thứ tự</th><th>Tên chương</th><th>Thao tác</th></tr></thead>
+          <tbody id="chapterListRows"><tr><td colspan="4">Chọn khóa học để xem chương.</td></tr></tbody>
+        </table>
+      </article>
+
+      <article class="panel">
+        <div class="section-head"><h2>Thêm bài học</h2></div>
+        <form id="lessonForm" class="form-stack">
+          <select class="field" id="lessonCourseId" name="courseId" required></select>
+          <select class="field" id="lessonChapterId" name="chapterId" required><option value="">Chọn chương</option></select>
+          <input class="field" name="title" placeholder="Tên bài học" required>
+          <textarea class="field textarea" name="content" placeholder="Nội dung bài học"></textarea>
+          <input class="field" name="videoUrl" placeholder="Video URL">
+          <input class="field" name="lessonOrder" type="number" min="0" placeholder="Thứ tự">
+          <button class="btn blue" type="submit">Thêm bài học</button>
+        </form>
+        <table class="table" style="margin-top:16px">
+          <thead><tr><th>ID</th><th>Thứ tự</th><th>Tên bài học</th><th>Thao tác</th></tr></thead>
+          <tbody id="lessonListRows"><tr><td colspan="4">Chọn chương để xem bài học.</td></tr></tbody>
+        </table>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Khóa học phụ trách</h2></div>
+      <table class="table">
+        <thead><tr><th>ID</th><th>Khóa học</th><th>Trạng thái</th><th>Danh mục</th><th>Thao tác</th></tr></thead>
+        <tbody id="teacherCourseRows"><tr><td colspan="5">Đang tải dữ liệu...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Quản lý ghi danh theo khóa học</h2></div>
+      <select class="field" id="enrollmentCourseId" style="max-width:420px;margin-bottom:16px"><option value="">Chọn khóa học</option></select>
+      <table class="table">
+        <thead><tr><th>Học viên</th><th>Trạng thái</th><th>Ngày đăng ký</th><th>Thao tác</th></tr></thead>
+        <tbody id="mgmtEnrollmentRows"><tr><td colspan="4">Chọn khóa học để xem ghi danh.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Thống kê ghi danh</h2></div>
+      <table class="table">
+        <thead><tr><th>ID</th><th>Khóa học</th><th>Tổng</th><th>Đang học</th><th>Hoàn thành</th><th>Đã hủy</th></tr></thead>
+        <tbody id="statRows"><tr><td colspan="6">Đang tải thống kê...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Tổng quan hệ thống (chỉ Admin)</h2></div>
+      <div class="overview-grid" id="adminOverviewGrid"><div class="empty-state">Đăng nhập với quyền Admin để xem tổng quan.</div></div>
+      <div id="adminMonthlyChartWrap" style="display:none">
+        <div class="section-head"><h2>Khóa học mới & ghi danh theo tháng</h2></div>
+        <div class="chart-legend"><span><i class="a"></i>Khóa học mới</span><span><i class="b"></i>Lượt ghi danh</span></div>
+        <div class="bar-chart" id="adminMonthlyChart"></div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký tài khoản</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html">
+        <span class="brand-mark">CM</span>
+        <span>Cổng lưu trữ thông tin khóa học</span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Giới thiệu</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học sinh</a>
+        <a href="teacher.html" data-nav>Giáo viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions">
+        <a class="btn" href="register.html">Tài khoản</a>
+        <a class="btn red" href="login.html">Đăng nhập</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Tài khoản</div>
+    <section class="hero-strip">
+      <div>
+        <div class="eyebrow">Tài khoản học viên</div>
+        <h1>Đăng ký tài khoản</h1>
+      </div>
+    </section>
+
+    <section class="auth-layout">
+      <div class="intro-panel">
+        <h2>Thông tin đăng ký</h2>
+        <p>Form đăng ký tạo tài khoản học viên để dùng chức năng ghi danh và theo dõi khóa học.</p>
+        <p>Sau khi tạo tài khoản, chuyển sang trang đăng nhập để lấy phiên làm việc.</p>
+      </div>
+      <div class="auth-card">
+        <h2>Tạo tài khoản</h2>
+        <form id="registerForm" class="form-stack">
+          <input class="field" name="fullName" placeholder="Họ và tên" required>
+          <input class="field" name="username" placeholder="Tên đăng nhập" required>
+          <input class="field" name="email" type="email" placeholder="Email" required>
+          <input class="field" name="phone" placeholder="Số điện thoại">
+          <input class="field" name="password" type="password" placeholder="Mật khẩu tối thiểu 6 ký tự" minlength="6" required>
+          <button class="btn blue" type="submit">Tạo tài khoản</button>
+          <a class="btn" href="login.html">Đã có tài khoản</a>
+        </form>
+        <div id="registerMessage" class="message"></div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

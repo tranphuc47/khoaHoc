@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thống kê tiến độ</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng quản lý khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Tổng quan</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học viên</a>
+        <a href="teacher.html" data-nav>Giảng viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+        <a href="statistics.html" data-nav>Thống kê</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><button class="btn red" data-logout>Đăng xuất</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Thống kê</div>
+    <section class="hero-strip">
+      <div><h1>Thống kê tiến độ hệ thống quản lý khóa học</h1></div>
+      <div class="stats">
+        <div class="stat"><div><strong id="statCourseTotal">0</strong><span>khóa học</span></div></div>
+        <div class="stat"><div><strong id="statDoneRate">0%</strong><span>hoàn thành</span></div></div>
+      </div>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title"><h2>Tổng quan ghi danh</h2></div>
+      <div class="tabs">
+        <a href="management.html">Khóa học</a>
+        <a href="categories.html">Danh mục</a>
+        <a href="teacher.html">Giảng viên</a>
+        <a class="active" href="statistics.html">Thống kê</a>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-card"><strong id="statEnrollTotal">0</strong>Tổng ghi danh</div>
+        <div class="metric-card"><strong id="statPendingTotal">0</strong>Chờ duyệt</div>
+        <div class="metric-card"><strong id="statActiveTotal">0</strong>Đang học</div>
+        <div class="metric-card"><strong id="statCompletedTotal">0</strong>Hoàn thành</div>
+        <div class="metric-card"><strong id="statCancelledTotal">0</strong>Đã hủy</div>
+      </div>
+    </section>
+
+    <section class="module-workflow statistics-summary">
+      <article>
+        <span>Đang học</span>
+        <h3 id="statActiveRate">0%</h3>
+        <p>Tỷ lệ học viên đã được duyệt và đang tham gia khóa học.</p>
+      </article>
+      <article>
+        <span>Hoàn thành</span>
+        <h3 id="statDoneRateCard">0%</h3>
+        <p>Tỷ lệ enrollment hoàn thành trên tổng số lượt ghi danh.</p>
+      </article>
+      <article>
+        <span>Khóa nổi bật</span>
+        <h3 id="statTopCourse">-</h3>
+        <p id="statTopCourseNote">Chưa có dữ liệu ghi danh để đánh giá.</p>
+      </article>
+      <article>
+        <h3>Đánh giá tiến độ</h3>
+        <p>So sánh tổng ghi danh, trạng thái học tập và tỷ lệ hoàn thành theo từng khóa.</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Tiến độ từng khóa học</h2></div>
+      <table class="table">
+        <thead><tr><th>Khóa học</th><th>Tiến độ hoàn thành</th><th>Tỷ lệ</th><th>Chi tiết</th></tr></thead>
+        <tbody id="progressRows"><tr><td colspan="4">Đang tải tiến độ...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Số liệu ghi danh</h2></div>
+      <table class="table">
+        <thead><tr><th>ID</th><th>Khóa học</th><th>Tổng</th><th>Đang học</th><th>Hoàn thành</th><th>Đã hủy</th></tr></thead>
+        <tbody id="statRows"><tr><td colspan="6">Đang tải thống kê...</td></tr></tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <div class="section-head"><h2>Tổng quan toàn hệ thống</h2><span class="count">Chỉ hiển thị đầy đủ với tài khoản Admin</span></div>
+      <div class="overview-grid" id="adminOverviewGrid"><div class="empty-state">Đăng nhập với quyền Admin để xem tổng quan hệ thống.</div></div>
+      <div id="adminMonthlyChartWrap" style="display:none">
+        <div class="section-head"><h2>Khóa học mới & ghi danh theo tháng</h2></div>
+        <div class="chart-legend"><span><i class="a"></i>Khóa học mới</span><span><i class="b"></i>Lượt ghi danh</span></div>
+        <div class="bar-chart" id="adminMonthlyChart"></div>
+      </div>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

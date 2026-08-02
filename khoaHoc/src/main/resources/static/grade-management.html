@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý điểm số</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html"><span class="brand-mark">CM</span><span>Cổng lưu trữ thông tin khóa học</span></a>
+      <nav class="main-nav">
+        <a href="index.html" data-nav>Giới thiệu</a>
+        <a href="courses.html" data-nav>Khóa học</a>
+        <a href="student.html" data-nav>Học sinh</a>
+        <a href="teacher.html" data-nav>Giáo viên</a>
+        <a href="management.html" data-nav>Quản lý</a>
+      </nav>
+      <div class="header-actions"><span class="btn" data-username>Tài khoản</span><button class="btn red" data-logout>Đăng xuất</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="breadcrumb">Trang chủ › Giáo viên › Điểm số</div>
+    <section class="hero-strip">
+      <div>
+        <div class="eyebrow">Quản lý điểm</div>
+        <h1>Nhập và theo dõi điểm số học sinh</h1>
+      </div>
+    </section>
+
+    <div class="local-note">Module Điểm số chưa có API ở backend (đã bị lược bỏ khỏi phạm vi dự án), nên dữ liệu ở trang này được lưu cục bộ ngay trên trình duyệt của bạn (localStorage). Giao diện và thao tác Thêm/Sửa/Xóa/Tính điểm hoạt động đầy đủ.</div>
+
+    <section class="panel" style="margin-top:20px">
+      <div class="tabs">
+        <a href="teacher.html">Lớp học</a>
+        <a class="active" href="grade-management.html">Điểm số</a>
+        <a href="courses.html">Khóa học</a>
+      </div>
+      <form id="gradeForm" class="form-grid">
+        <input class="field" name="studentCode" placeholder="Mã sinh viên" required>
+        <input class="field" name="studentName" placeholder="Họ và tên" required>
+        <select class="field" name="classCode" required>
+          <option value="JAVA-K18">JAVA-K18 - Lập trình Java</option>
+          <option value="DB-K18">DB-K18 - Cơ sở dữ liệu</option>
+          <option value="WEB-K18">WEB-K18 - Lập trình Web</option>
+        </select>
+        <input class="field" name="attendance" type="number" min="0" max="10" step="0.1" placeholder="Điểm chuyên cần" required>
+        <input class="field" name="midterm" type="number" min="0" max="10" step="0.1" placeholder="Điểm giữa kỳ" required>
+        <input class="field" name="final" type="number" min="0" max="10" step="0.1" placeholder="Điểm cuối kỳ" required>
+        <textarea class="field textarea wide" name="note" placeholder="Ghi chú"></textarea>
+        <button class="btn red" type="submit" data-grade-submit>Lưu điểm</button>
+      </form>
+      <p class="count" style="margin-top:10px">Công thức tổng kết: Chuyên cần 10% + Giữa kỳ 30% + Cuối kỳ 60%.</p>
+    </section>
+
+    <section class="my-courses">
+      <div class="my-courses-title">
+        <h2>Bảng điểm lớp <span id="gradeClassTitle">JAVA-K18 - Lập trình Java</span></h2>
+        <span class="count">Dữ liệu lưu trên trình duyệt của bạn</span>
+      </div>
+      <table class="table">
+        <thead><tr><th>Mã SV</th><th>Họ tên</th><th>Chuyên cần</th><th>Giữa kỳ</th><th>Cuối kỳ</th><th>Tổng kết</th><th>Thao tác</th></tr></thead>
+        <tbody id="gradeRows"><tr><td colspan="7">Chưa có dữ liệu điểm cho lớp này.</td></tr></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
