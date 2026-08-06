@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Hệ Thống — CourseHub Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="app-header">
+    <div class="header-inner">
+        <a class="brand" href="index.html">
+            <span class="brand-mark">CH</span>
+            <span>CourseHub</span>
+        </a>
+        <nav class="main-nav">
+            <a href="index.html">Khóa học trang chủ</a>
+            <a href="admin.html" class="active">Quản trị hệ thống</a>
+            <a href="dashboard.html?view=profile">Hồ sơ cá nhân</a>
+        </nav>
+        <div class="header-actions">
+            <span class="btn" data-auth-only>
+                <span data-username>Admin</span> 
+                <span class="badge red" data-role-badge>ADMIN</span>
+            </span>
+            <button class="btn red" data-logout>Đăng xuất</button>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <section class="hero-banner" style="background: linear-gradient(135deg, #17233A 0%, var(--blue-dark) 100%);">
+        <h1>⚙️ Bảng Điều Khiển Quản Trị Viên (Admin)</h1>
+        <p>Quản lý toàn bộ khóa học, tài khoản người dùng, danh mục môn học và theo dõi báo cáo thống kê doanh thu/ghi danh.</p>
+    </section>
+
+    <div class="panel">
+        <div class="tabs">
+            <button class="active" data-atab="courses">Duyệt khóa học</button>
+            <button data-atab="users">Quản lý người dùng</button>
+            <button data-atab="categories">Danh mục khóa học</button>
+            <button data-atab="stats">Thống kê hệ thống</button>
+        </div>
+
+        <!-- Tab 1: Duyệt khóa học -->
+        <div id="atab-courses">
+            <div class="section-head">
+                <h2>📚 Kiểm duyệt danh sách khóa học</h2>
+                <span class="count">Duyệt PUBLISHED để hiển thị trang chủ hoặc Gỡ về DRAFT</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tên khóa học</th>
+                            <th>Giảng viên phụ trách</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác duyệt</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminCourseRows">
+                        <tr><td colspan="4">Đang tải danh sách...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 2: Quản lý người dùng -->
+        <div id="atab-users" style="display:none">
+            <div class="section-head">
+                <h2>👥 Danh sách người dùng hệ thống</h2>
+                <span class="count">Khóa hoặc Mở lại quyền truy cập tài khoản</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tài khoản</th>
+                            <th>Họ và tên</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userRows">
+                        <tr><td colspan="5">Đang tải danh sách...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: Danh mục khóa học -->
+        <div id="atab-categories" style="display:none">
+            <div class="section-head">
+                <h2>🏷️ Danh mục môn học</h2>
+            </div>
+            <form class="filters" id="createCategoryForm" style="display:grid; grid-template-columns:1fr 1fr 140px; gap:12px; margin-bottom:20px;">
+                <input class="field" id="catName" placeholder="Tên danh mục mới" required>
+                <input class="field" id="catDescription" placeholder="Mô tả danh mục">
+                <button class="btn red" type="submit">+ Thêm danh mục</button>
+            </form>
+            <div class="message" id="categoryMessage"></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryRows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 4: Thống kê hệ thống -->
+        <div id="atab-stats" style="display:none">
+            <div class="section-head">
+                <h2>📊 Báo cáo thống kê lượt ghi danh</h2>
+            </div>
+            <div class="metric-grid" id="statsGrid"></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tên khóa học</th>
+                            <th>Tổng lượt đăng ký</th>
+                            <th>Đang học (ACTIVE)</th>
+                            <th>Hoàn thành</th>
+                            <th>Đã hủy</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal Sửa Danh Mục -->
+<div class="modal-overlay" id="editCategoryModal" style="display:none">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>🏷️ Chỉnh Sửa Danh Mục</h3>
+            <button class="modal-close" data-close-modal="editCategoryModal">&times;</button>
+        </div>
+        <form class="form-stack" id="editCategoryForm">
+            <input type="hidden" id="editCatId">
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text-muted);">Tên danh mục</label>
+                <input class="field" id="editCatName" required>
+            </div>
+            <div>
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text-muted);">Mô tả</label>
+                <input class="field" id="editCatDescription">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" type="button" data-close-modal="editCategoryModal">Hủy</button>
+                <button class="btn red" type="submit">Lưu thay đổi</button>
+            </div>
+        </form>
+        <div class="message" id="editCategoryMessage"></div>
+    </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
